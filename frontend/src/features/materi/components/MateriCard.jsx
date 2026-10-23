@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, ExternalLink, Edit2, Trash2, ChevronRight } from 'lucide-react';
-import { formatDurasi, getStatusMeta } from '../utils/formatters.js';
+import { formatDurasi, getStatusMeta } from '../../../utils/formatters.js';
 
 export const MateriCard = ({ materi, onEdit, onDelete }) => {
   const statusMeta = getStatusMeta(materi.status);
@@ -13,24 +13,28 @@ export const MateriCard = ({ materi, onEdit, onDelete }) => {
           {statusMeta.label}
         </span>
         <div className="materi-actions">
-          <button
-            type="button"
-            className="btn-icon"
-            onClick={() => onEdit(materi)}
-            title="Ubah Materi"
-            aria-label="Ubah Materi"
-          >
-            <Edit2 size={16} />
-          </button>
-          <button
-            type="button"
-            className="btn-icon btn-icon-danger"
-            onClick={() => onDelete(materi)}
-            title="Hapus Materi"
-            aria-label="Hapus Materi"
-          >
-            <Trash2 size={16} />
-          </button>
+          {onEdit && (
+            <button
+              type="button"
+              className="btn-icon"
+              onClick={() => onEdit(materi)}
+              title="Ubah Materi"
+              aria-label="Ubah Materi"
+            >
+              <Edit2 size={16} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              className="btn-icon btn-icon-danger"
+              onClick={() => onDelete(materi)}
+              title="Hapus Materi"
+              aria-label="Hapus Materi"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       </div>
 

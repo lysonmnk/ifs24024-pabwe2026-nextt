@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
-import { validateMateri } from '../utils/validators.js';
+import { validateMateri } from '../../../utils/validators.js';
+import { Button } from '../../../components/common/Button.jsx';
 
-export const MateriModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
+export const MateriForm = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData = null
+}) => {
   const [judul, setJudul] = useState('');
   const [sumber, setSumber] = useState('');
   const [status, setStatus] = useState('belum');
@@ -54,19 +60,24 @@ export const MateriModal = ({ isOpen, onClose, onSubmit, initialData = null }) =
   };
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal-box">
         <div className="modal-header">
           <h2 className="modal-title">
             {isEdit ? 'Ubah Materi Belajar' : 'Tambah Materi Belajar'}
           </h2>
-          <button type="button" className="btn-icon" onClick={onClose} aria-label="Tutup">
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={onClose}
+            aria-label="Tutup"
+          >
             <X size={20} />
           </button>
         </div>
 
         {serverError && (
-          <div className="alert alert-error">
+          <div className="alert alert-error" role="alert">
             <AlertCircle size={18} />
             <span>{serverError}</span>
           </div>
@@ -74,11 +85,12 @@ export const MateriModal = ({ isOpen, onClose, onSubmit, initialData = null }) =
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label htmlFor="judul" className="form-label">
+            <label htmlFor="materi-judul" className="form-label">
               Judul Materi <span className="text-danger">*</span>
             </label>
             <input
-              id="judul"
+              id="materi-judul"
+              name="judul"
               type="text"
               className={`form-input ${errors.judul ? 'input-error' : ''}`}
               placeholder="Contoh: Belajar React Hooks, Node.js REST API"
@@ -93,11 +105,12 @@ export const MateriModal = ({ isOpen, onClose, onSubmit, initialData = null }) =
           </div>
 
           <div className="form-group">
-            <label htmlFor="sumber" className="form-label">
+            <label htmlFor="materi-sumber" className="form-label">
               Sumber Materi (Opsional)
             </label>
             <input
-              id="sumber"
+              id="materi-sumber"
+              name="sumber"
               type="text"
               className="form-input"
               placeholder="Contoh: SoloLearn, MDN Web Docs, YouTube"
@@ -107,11 +120,12 @@ export const MateriModal = ({ isOpen, onClose, onSubmit, initialData = null }) =
           </div>
 
           <div className="form-group">
-            <label htmlFor="status" className="form-label">
+            <label htmlFor="materi-status" className="form-label">
               Status Belajar
             </label>
             <select
-              id="status"
+              id="materi-status"
+              name="status"
               className="form-input"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
@@ -123,21 +137,21 @@ export const MateriModal = ({ isOpen, onClose, onSubmit, initialData = null }) =
           </div>
 
           <div className="modal-actions">
-            <button
+            <Button
               type="button"
-              className="btn btn-secondary"
+              variant="secondary"
               onClick={onClose}
               disabled={isSubmitting}
             >
               Batal
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah Materi'}
-            </button>
+            </Button>
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
+              {isSubmitting
+                ? 'Menyimpan...'
+                : isEdit
+                  ? 'Simpan Perubahan'
+                  : 'Tambah Materi'}
+            </Button>
           </div>
         </form>
       </div>

@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
-import { validateSesi } from '../utils/validators.js';
+import { validateSesi } from '../../../utils/validators.js';
+import { Button } from '../../../components/common/Button.jsx';
 
-export const SesiModal = ({ isOpen, onClose, onSubmit, materiJudul = '' }) => {
+export const SesiForm = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  materiJudul = ''
+}) => {
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
   const [tanggal, setTanggal] = useState(getTodayString());
@@ -54,22 +60,29 @@ export const SesiModal = ({ isOpen, onClose, onSubmit, materiJudul = '' }) => {
   };
 
   return (
-    <div className="modal-backdrop">
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal-box">
         <div className="modal-header">
           <div>
             <h2 className="modal-title">Catat Sesi Belajar</h2>
             {materiJudul && (
-              <p className="modal-subtitle">Untuk: <strong>{materiJudul}</strong></p>
+              <p className="modal-subtitle">
+                Untuk materi: <strong>{materiJudul}</strong>
+              </p>
             )}
           </div>
-          <button type="button" className="btn-icon" onClick={onClose} aria-label="Tutup">
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={onClose}
+            aria-label="Tutup"
+          >
             <X size={20} />
           </button>
         </div>
 
         {serverError && (
-          <div className="alert alert-error">
+          <div className="alert alert-error" role="alert">
             <AlertCircle size={18} />
             <span>{serverError}</span>
           </div>
@@ -77,11 +90,12 @@ export const SesiModal = ({ isOpen, onClose, onSubmit, materiJudul = '' }) => {
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label htmlFor="tanggal" className="form-label">
+            <label htmlFor="sesi-tanggal" className="form-label">
               Tanggal Belajar <span className="text-danger">*</span>
             </label>
             <input
-              id="tanggal"
+              id="sesi-tanggal"
+              name="tanggal"
               type="date"
               className={`form-input ${errors.tanggal ? 'input-error' : ''}`}
               value={tanggal}
@@ -94,11 +108,12 @@ export const SesiModal = ({ isOpen, onClose, onSubmit, materiJudul = '' }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="durasi" className="form-label">
+            <label htmlFor="sesi-durasi" className="form-label">
               Durasi (dalam menit) <span className="text-danger">*</span>
             </label>
             <input
-              id="durasi"
+              id="sesi-durasi"
+              name="durasi_menit"
               type="number"
               min="1"
               step="1"
@@ -107,42 +122,42 @@ export const SesiModal = ({ isOpen, onClose, onSubmit, materiJudul = '' }) => {
               value={durasiMenit}
               onChange={(e) => {
                 setDurasiMenit(e.target.value);
-                if (errors.durasi_menit) setErrors((prev) => ({ ...prev, durasi_menit: null }));
+                if (errors.durasi_menit)
+                  setErrors((prev) => ({ ...prev, durasi_menit: null }));
               }}
             />
-            {errors.durasi_menit && <p className="error-text">{errors.durasi_menit}</p>}
+            {errors.durasi_menit && (
+              <p className="error-text">{errors.durasi_menit}</p>
+            )}
           </div>
 
           <div className="form-group">
-            <label htmlFor="catatan" className="form-label">
+            <label htmlFor="sesi-catatan" className="form-label">
               Catatan Sesi (Opsional)
             </label>
             <textarea
-              id="catatan"
+              id="sesi-catatan"
+              name="catatan"
               rows="3"
               className="form-input form-textarea"
-              placeholder="Contoh: Mempelajari cara kerja async/await dan Promise.all"
+              placeholder="Contoh: Mempelajari cara kerja custom hooks dan lifecycle"
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
             />
           </div>
 
           <div className="modal-actions">
-            <button
+            <Button
               type="button"
-              className="btn btn-secondary"
+              variant="secondary"
               onClick={onClose}
               disabled={isSubmitting}
             >
               Batal
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-            >
+            </Button>
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
               {isSubmitting ? 'Menyimpan...' : 'Simpan Sesi'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

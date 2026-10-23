@@ -12,7 +12,7 @@ export const useSesi = (materiId) => {
     setError(null);
     try {
       const data = await sesiService.getSesiListByMateriId(materiId);
-      setSesiList(data);
+      setSesiList(data || []);
     } catch (err) {
       setError(err.message || 'Gagal memuat sesi belajar');
     } finally {

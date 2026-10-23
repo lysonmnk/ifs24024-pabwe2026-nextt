@@ -1,7 +1,7 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from '../lib/config.js';
 
-export const request = async (endpoint, options = {}) => {
-  const url = `${BASE_URL}${endpoint}`;
+export const apiClient = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
   const config = {
     headers: {
       'Content-Type': 'application/json',
@@ -27,7 +27,9 @@ export const request = async (endpoint, options = {}) => {
     return result;
   } catch (err) {
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      const netError = new Error('Gagal terhubung ke server backend. Pastikan server sudah aktif.');
+      const netError = new Error(
+        'Gagal terhubung ke server backend. Pastikan server sudah aktif.'
+      );
       netError.errors = ['Koneksi jaringan terputus atau server backend mati'];
       throw netError;
     }

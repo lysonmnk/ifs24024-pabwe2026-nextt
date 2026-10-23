@@ -1,20 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Plus,
-  Clock,
-  ExternalLink,
-  Calendar,
-  Trash2,
-  FileText,
-  AlertCircle
-} from 'lucide-react';
+import { ArrowLeft, Plus, Clock, ExternalLink } from 'lucide-react';
 import * as materiService from '../services/materiService.js';
-import { useSesi } from '../hooks/useSesi.js';
-import { SesiModal } from '../components/SesiModal.jsx';
-import { ConfirmModal } from '../components/ConfirmModal.jsx';
-import { formatDurasi, formatTanggal, getStatusMeta } from '../utils/formatters.js';
+import { useSesi } from '../../sesi/hooks/useSesi.js';
+import { SesiForm } from '../../sesi/components/SesiForm.jsx';
+import { SesiList } from '../../sesi/components/SesiList.jsx';
+import { ConfirmModal } from '../../../components/ConfirmModal.jsx';
+import { Loading } from '../../../components/common/Loading.jsx';
+import { ErrorMessage } from '../../../components/common/ErrorMessage.jsx';
+import { Button } from '../../../components/common/Button.jsx';
+import { formatDurasi, formatTanggal, getStatusMeta } from '../../../utils/formatters.js';
 
 export const MateriDetailPage = () => {
   const { id } = useParams();
@@ -52,7 +47,6 @@ export const MateriDetailPage = () => {
 
   const handleAddSesi = async (payload) => {
     await addSesi(payload);
-    // Refresh materi detail to update total_menit
     fetchMateriDetail();
   };
 
@@ -65,12 +59,7 @@ export const MateriDetailPage = () => {
   };
 
   if (materiLoading) {
-    return (
-      <div className="page-container loading-container">
-        <div className="spinner" />
-        <p>Memuat detail materi...</p>
-      </div>
-    );
+    return <Loading message="Memuat detail materi..." />;
   }
 
   if (materiError || !materi) {
@@ -79,10 +68,7 @@ export const MateriDetailPage = () => {
         <Link to="/" className="btn-back">
           <ArrowLeft size={18} /> Kembali ke Beranda
         </Link>
-        <div className="alert alert-error mt-4">
-          <AlertCircle size={20} />
-          <span>{materiError || 'Materi tidak ditemukan'}</span>
-        </div>
+        <ErrorMessage message={materiError || 'Materi tidak ditemukan'} />
       </div>
     );
   }
@@ -95,7 +81,6 @@ export const MateriDetailPage = () => {
         <ArrowLeft size={18} /> Kembali ke Daftar Materi
       </Link>
 
-      {/* Header Info Materi */}
       <div className="detail-hero-card">
         <div className="detail-header-top">
           <span className={`status-badge ${statusMeta.badgeClass}`}>
@@ -117,7 +102,6 @@ export const MateriDetailPage = () => {
         )}
       </div>
 
-      {/* Sesi Belajar Section */}
       <div className="session-header-section">
         <div>
           <h3 className="section-title">Riwayat Sesi Belajar</h3>
@@ -125,78 +109,21 @@ export const MateriDetailPage = () => {
             Catatan sesi belajar beserta waktu yang dihabiskan
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary btn-with-icon"
-          onClick={() => setModalOpen(true)}
-        >
+        <Button variant="primary" onClick={() => setModalOpen(true)}>
           <Plus size={18} />
           <span>Catat Sesi Baru</span>
-        </button>
+        </Button>
       </div>
 
-      {sesiError && (
-        <div className="alert alert-error">
-          <AlertCircle size={20} />
-          <span>{sesiError}</span>
-        </div>
-      )}
+      <ErrorMessage message={sesiError} />
 
       {sesiLoading ? (
-        <div className="loading-container">
-          <div className="spinner" />
-          <p>Memuat sesi belajar...</p>
-        </div>
-      ) : sesiList.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">⏱️</div>
-          <h3>Belum Ada Sesi Belajar</h3>
-          <p>
-            Materi ini belum memiliki catatan sesi. Klik tombol di atas untuk
-            mencatat sesi belajarmu hari ini!
-          </p>
-        </div>
+        <Loading message="Memuat sesi belajar..." />
       ) : (
-        <div className="sessions-list">
-          {sesiList.map((sesi) => (
-            <div key={sesi.id} className="session-item-card">
-              <div className="session-item-main">
-                <div className="session-meta">
-                  <div className="meta-tag">
-                    <Calendar size={14} />
-                    <span>{formatTanggal(sesi.tanggal)}</span>
-                  </div>
-                  <div className="meta-tag meta-duration">
-                    <Clock size={14} />
-                    <span>{sesi.durasi_menit} menit</span>
-                  </div>
-                </div>
-
-                {sesi.catatan ? (
-                  <p className="session-note">{sesi.catatan}</p>
-                ) : (
-                  <p className="session-note note-empty">Tidak ada catatan</p>
-                )}
-              </div>
-
-              <div className="session-actions">
-                <button
-                  type="button"
-                  className="btn-icon btn-icon-danger"
-                  onClick={() => setDeletingSesi(sesi)}
-                  title="Hapus Sesi"
-                  aria-label="Hapus Sesi"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <SesiList sesiList={sesiList} onDelete={setDeletingSesi} />
       )}
 
-      {/* Modals */}
-      <SesiModal
+      <SesiForm
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={handleAddSesi}
@@ -208,7 +135,7 @@ export const MateriDetailPage = () => {
         onClose={() => setDeletingSesi(null)}
         onConfirm={handleConfirmDeleteSesi}
         title="Hapus Sesi Belajar"
-        message={`Sesi pada tanggal ${formatTanggal(deletingSesi?.tanggal)} (${deletingSesi?.durasi_menit} menit) akan dihapus. Lanjutkan?`}
+        message={`Sesi tanggal ${formatTanggal(deletingSesi?.tanggal)} (${deletingSesi?.durasi_menit} menit) akan dihapus. Lanjutkan?`}
       />
     </div>
   );

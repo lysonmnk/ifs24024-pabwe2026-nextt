@@ -11,7 +11,7 @@ export const useMateri = () => {
     setError(null);
     try {
       const data = await materiService.getMateriList();
-      setMateriList(data);
+      setMateriList(data || []);
     } catch (err) {
       setError(err.message || 'Gagal memuat daftar materi');
     } finally {

@@ -14,6 +14,17 @@ describe('HyperLink Backend API Integration Tests', () => {
     closeDatabase();
   });
 
+  describe('Health Check (/api/health)', () => {
+    it('harus mengembalikan status OK dan message yang sesuai', async () => {
+      const res = await request(app).get('/api/health');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('API siap melayani permintaan');
+      expect(res.body.data.status).toBe('OK');
+      expect(res.body.data.timestamp).toBeDefined();
+    });
+  });
+
   describe('CRUD Materi Belajar (/api/materi)', () => {
     it('harus mengembalikan daftar materi kosong saat pertama kali', async () => {
       const res = await request(app).get('/api/materi');

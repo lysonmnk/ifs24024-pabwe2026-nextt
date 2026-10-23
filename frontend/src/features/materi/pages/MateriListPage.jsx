@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, Search, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useMateri } from '../hooks/useMateri.js';
-import { StatsBanner } from '../components/StatsBanner.jsx';
-import { MateriCard } from '../components/MateriCard.jsx';
-import { MateriModal } from '../components/MateriModal.jsx';
-import { ConfirmModal } from '../components/ConfirmModal.jsx';
+import { MateriList } from '../components/MateriList.jsx';
+import { MateriForm } from '../components/MateriForm.jsx';
+import { ConfirmModal } from '../../../components/ConfirmModal.jsx';
+import { StatsBanner } from '../../../components/StatsBanner.jsx';
+import { Loading } from '../../../components/common/Loading.jsx';
+import { ErrorMessage } from '../../../components/common/ErrorMessage.jsx';
+import { Button } from '../../../components/common/Button.jsx';
 
 export const MateriListPage = () => {
   const {
@@ -61,27 +64,21 @@ export const MateriListPage = () => {
 
   return (
     <div className="page-container">
-      {/* Header Statistik */}
       <div className="page-header-section">
         <div>
-          <h2 className="section-title">Dashboard Progres Belajar</h2>
+          <h2 className="section-title">Dashboard Materi Belajar</h2>
           <p className="section-subtitle">
             Kelola materi pemrograman dan pantau durasi waktu belajarmu
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary btn-with-icon"
-          onClick={handleOpenAdd}
-        >
+        <Button variant="primary" onClick={handleOpenAdd}>
           <Plus size={18} />
           <span>Tambah Materi</span>
-        </button>
+        </Button>
       </div>
 
       <StatsBanner materiList={materiList} />
 
-      {/* Filter and Search Bar */}
       <div className="filter-bar">
         <div className="search-input-wrapper">
           <Search size={18} className="search-icon" />
@@ -113,59 +110,21 @@ export const MateriListPage = () => {
         </div>
       </div>
 
-      {/* Error state */}
-      {error && (
-        <div className="alert alert-error">
-          <AlertCircle size={20} />
-          <div className="alert-content">
-            <strong>Terjadi Kesalahan:</strong> {error}
-          </div>
-          <button type="button" className="btn-link" onClick={refresh}>
-            <RefreshCw size={14} /> Coba Lagi
-          </button>
-        </div>
-      )}
+      <ErrorMessage message={error} onRetry={refresh} />
 
-      {/* Loading state */}
       {loading ? (
-        <div className="loading-container">
-          <div className="spinner" />
-          <p>Memuat materi belajar...</p>
-        </div>
-      ) : filteredMateri.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">📚</div>
-          <h3>Tidak Ada Materi Belajar</h3>
-          <p>
-            {search || statusFilter !== 'semua'
-              ? 'Tidak ditemukan materi yang cocok dengan filter pencarian.'
-              : 'Belum ada materi belajar yang ditambahkan. Mulai dengan menambahkan materi pertamamu!'}
-          </p>
-          {!search && statusFilter === 'semua' && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleOpenAdd}
-            >
-              <Plus size={16} /> Tambah Materi Sekarang
-            </button>
-          )}
-        </div>
+        <Loading message="Memuat daftar materi..." />
       ) : (
-        <div className="materi-grid">
-          {filteredMateri.map((materi) => (
-            <MateriCard
-              key={materi.id}
-              materi={materi}
-              onEdit={handleOpenEdit}
-              onDelete={setDeletingMateri}
-            />
-          ))}
-        </div>
+        <MateriList
+          materiList={filteredMateri}
+          onEdit={handleOpenEdit}
+          onDelete={setDeletingMateri}
+          onAddNew={handleOpenAdd}
+          hasFilter={Boolean(search || statusFilter !== 'semua')}
+        />
       )}
 
-      {/* Modals */}
-      <MateriModal
+      <MateriForm
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={handleModalSubmit}
@@ -177,7 +136,7 @@ export const MateriListPage = () => {
         onClose={() => setDeletingMateri(null)}
         onConfirm={handleConfirmDelete}
         title="Hapus Materi Belajar"
-        message={`Materi "${deletingMateri?.judul}" beserta seluruh riwayat sesi belajarnya akan dihapus secara permanen. Lanjutkan?`}
+        message={`Materi "${deletingMateri?.judul}" beserta seluruh riwayat sesinya akan dihapus permanen. Lanjutkan?`}
       />
     </div>
   );

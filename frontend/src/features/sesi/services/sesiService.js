@@ -1,12 +1,12 @@
-import { request } from './api.js';
+import { apiClient } from '../../../helpers/apiClient.js';
 
 export const getSesiListByMateriId = async (materiId) => {
-  const res = await request(`/materi/${materiId}/sesi`);
+  const res = await apiClient(`/materi/${materiId}/sesi`);
   return res.data;
 };
 
 export const createSesi = async (materiId, payload) => {
-  const res = await request(`/materi/${materiId}/sesi`, {
+  const res = await apiClient(`/materi/${materiId}/sesi`, {
     method: 'POST',
     body: JSON.stringify(payload)
   });
@@ -14,7 +14,7 @@ export const createSesi = async (materiId, payload) => {
 };
 
 export const deleteSesi = async (id) => {
-  const res = await request(`/sesi/${id}`, {
+  const res = await apiClient(`/sesi/${id}`, {
     method: 'DELETE'
   });
   return res;
