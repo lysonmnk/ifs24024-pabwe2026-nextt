@@ -1,7 +1,7 @@
 {
   "name": "ifs24024-pabwe2026-p1-backend",
   "version": "1.0.0",
-  "description": "Backend API untuk HyperLink - Proyek 1 PABWE 2026",
+  "description": "Backend API untuk Catatan Belajar Ngoding - Proyek 1 PABWE 2026",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
@@ -14,14 +14,17 @@
   "keywords": [
     "express",
     "sqlite",
-    "hyperlink"
+    "jwt",
+    "bcryptjs"
   ],
   "author": "Lyson Paulus Esar Manik <11S24024>",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
   },
   "optionalDependencies": {
     "better-sqlite3": "^11.8.1"
