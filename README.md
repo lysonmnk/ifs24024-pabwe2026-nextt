@@ -526,9 +526,57 @@ Tahap **Deploy** pada pipeline memicu deployment otomatis setelah seluruh tahap 
 **Manual (alternatif)**
 
 - **Frontend:** layanan hosting statis seperti Vercel, dengan Root Directory `frontend`, preset `Vite`, dan variabel `VITE_API_URL` berisi alamat API yang sudah di-deploy.
-- **Backend:** layanan dengan **penyimpanan persisten**, karena SQLite menyimpan data dalam berkas. Variabel yang diatur: `PORT`, `DB_PATH` (mengarah ke disk persisten), `CORS_ORIGIN` (URL frontend), dan `NODE_ENV=production`.
+- **Backend:** layanan dengan **penyimpanan persisten**, karena SQLite menyimpan data dalam berkas. Variabel yang diatur: `PORT`, `DB_PATH` (mengarah ke disk persisten), `CORS_ORIGIN` (URL frontend), dan `NODE_ENV=production`.## ✨ Fitur Utama
+
+### 🔐 Autentikasi
+- Registrasi dan login pengguna dengan validasi formulir
+- Penyimpanan token akses di `localStorage` dan bearer token otomatis pada setiap request
+- Proteksi rute: pengguna yang sudah login dialihkan dari halaman auth ke dashboard
+
+  ### 📰 Manajemen Postingan
+- Linimasa postingan publik dengan tab filter **Postingan Saya** (`is_me=1`)
+- Pencarian langsung (*live search*)
+- Tambah, ubah, dan hapus postingan
+- Unggah atau ganti gambar cover dengan pratinjau (*preview*)
+- Like / unlike materi 
+- Tambah dan hapus komentar
+- Hapus seluruh jawaban milik pengguna
+
+  ### 👤 Pengguna & Profil
+- Direktori seluruh pengguna dengan fitur pencarian
+- Pembaruan profil (bio), foto avatar, dan kata sandi
+
+  ### 🎨 Antarmuka
+- Desain responsif dengan sidebar berbentuk *drawer* di perangkat mobile
+- Dialog interaktif menggunakan SweetAlert2
+- Tipografi menggunakan Google Fonts
+## 🧭 Rute Aplikasi
+
+| Rute | Halaman | Akses |
+| --- | --- | --- |
+| `/auth/login` | Login | Publik |
+| `/auth/register` | Registrasi | Publik |
+| `/` | Linimasa postingan | 🔒 Terproteksi |
+| `/posts/[postId]` | Detail postingan | 🔒 Terproteksi |
+| `/users` | Daftar pengguna | 🔒 Terproteksi |
+| `/profile` | Profil saya | 🔒 Terproteksi |
+
+### Tahapan Pipeline
+
+| # | Stage | Image | Deskripsi |
+| --- | --- | --- | --- |
+| 1 | **Checkout** | `oven/bun:alpine` | Mengambil kode sumber dari SCM |
+| 2 | **Install Dependencies** | `oven/bun:alpine` | Menjalankan `bun install` |
+| 3 | **Test** | `node:24-alpine` | Menjalankan `vitest run --coverage` |
+| 4 | **Trivy Security Scan** | `aquasec/trivy` | Memindai kerentanan `HIGH`/`CRITICAL`; hasil SARIF dilaporkan ke Warnings NG, build gagal bila ditemukan |
+| 5 | **SonarQube Analysis** | `sonarsource/sonar-scanner-cli` | Analisis kualitas kode dan coverage |
+| 6 | **Quality Gate** | — | Menunggu hasil Quality Gate (timeout 30 menit), pipeline dihentikan bila gagal |
+| 7 | **Package Application** | `node:24-alpine` | Membuat `latest-app.zip` (mengecualikan `node_modules`, `.env`, `.next`, `coverage`, dll.) |
+| 8 | **Publish Application** | — | Mengarsipkan artifact dan menyalinnya ke Jenkins `userContent` untuk mendapatkan URL publik |
+| 9 | **Deploy Application** | `curlimages/curl` | Memicu redeploy melalui API, lalu polling status hingga `SUCCESS` atau `FAIL` (maks. 120 percobaan × 5 detik) |
 
 ---
+
 
 ## Praktik Terbaik yang Diterapkan
 
