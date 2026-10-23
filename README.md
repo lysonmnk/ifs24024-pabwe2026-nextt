@@ -1,4 +1,4 @@
-# Catatan Belajar Ngoding
+# HyperLink
 
 Aplikasi web untuk mencatat materi pemrograman yang sedang dipelajari beserta sesi belajarnya. Pengguna dapat mengelola daftar materi, mencatat durasi dan catatan setiap sesi, serta memantau total waktu belajar pada setiap materi.
 
