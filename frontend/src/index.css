@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
@@ -105,10 +107,17 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.brand-subtitle {
+.brand-subtitle,
+.navbar-subtitle {
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
 }
 
 .student-badge {
@@ -847,6 +856,74 @@ body {
   to {
     opacity: 1;
   }
+}
+
+.auth-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+  background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 40%, #f8fafc 100%);
+}
+
+.auth-brand {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 420px;
+}
+
+.auth-brand-copy {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.75rem;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-submit {
+  width: 100%;
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.auth-switch a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 @keyframes slideUp {

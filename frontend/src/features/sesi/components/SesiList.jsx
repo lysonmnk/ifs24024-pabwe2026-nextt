@@ -1,17 +1,16 @@
 import React from 'react';
 import { Calendar, Clock, Trash2 } from 'lucide-react';
 import { formatTanggal } from '../../../utils/formatters.js';
+import { EmptyState } from '../../../components/common/EmptyState.jsx';
 
 export const SesiList = ({ sesiList = [], onDelete }) => {
   if (sesiList.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">⏱️</div>
-        <h3>Belum Ada Sesi Belajar</h3>
-        <p>
-          Materi ini belum memiliki catatan sesi. Mulai mencatat sesi belajarmu sekarang!
-        </p>
-      </div>
+      <EmptyState
+        icon="⏱️"
+        title="Belum Ada Sesi Belajar"
+        message="Materi ini belum memiliki catatan sesi. Mulai mencatat sesi belajarmu sekarang!"
+      />
     );
   }
 

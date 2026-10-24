@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import materiRoutes from './materiRoutes.js';
-import sesiRoutes from './sesiRoutes.js';
-import { sendSuccess } from '../utils/responseHelper.js';
+import authRoutes from './auth.routes.js';
+import materiRoutes from './materi.routes.js';
+import sesiRoutes from './sesi.routes.js';
+import { sendSuccess } from '../utils/response.js';
 
 const router = Router();
 
-// Health check endpoint
 router.get('/health', (req, res) => {
   return sendSuccess(res, 200, 'API siap melayani permintaan', {
     status: 'OK',
@@ -13,6 +13,7 @@ router.get('/health', (req, res) => {
   });
 });
 
+router.use('/auth', authRoutes);
 router.use('/materi', materiRoutes);
 router.use('/sesi', sesiRoutes);
 

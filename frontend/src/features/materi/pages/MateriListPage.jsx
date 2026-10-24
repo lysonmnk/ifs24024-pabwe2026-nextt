@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useMateri } from '../hooks/useMateri.js';
 import { MateriList } from '../components/MateriList.jsx';
 import { MateriForm } from '../components/MateriForm.jsx';
+import { MateriFilter } from '../components/MateriFilter.jsx';
 import { ConfirmModal } from '../../../components/ConfirmModal.jsx';
 import { StatsBanner } from '../../../components/StatsBanner.jsx';
 import { Loading } from '../../../components/common/Loading.jsx';
@@ -79,36 +80,12 @@ export const MateriListPage = () => {
 
       <StatsBanner materiList={materiList} />
 
-      <div className="filter-bar">
-        <div className="search-input-wrapper">
-          <Search size={18} className="search-icon" />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Cari judul materi atau sumber..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div className="status-tabs">
-          {[
-            { id: 'semua', label: 'Semua' },
-            { id: 'belum', label: 'Belum Mulai' },
-            { id: 'sedang', label: 'Sedang Belajar' },
-            { id: 'selesai', label: 'Selesai' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`tab-btn ${statusFilter === tab.id ? 'tab-btn-active' : ''}`}
-              onClick={() => setStatusFilter(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <MateriFilter
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+      />
 
       <ErrorMessage message={error} onRetry={refresh} />
 

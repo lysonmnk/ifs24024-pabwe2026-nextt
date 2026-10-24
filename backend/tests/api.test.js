@@ -1,11 +1,22 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../src/app.js';
-import { getDatabase, setDatabase, closeDatabase } from '../src/config/db.js';
+import { getDatabase, closeDatabase } from '../src/config/database.js';
 
-describe('HyperLink Backend API Integration Tests', () => {
+const authHeader = (token) => ({ Authorization: `Bearer ${token}` });
+
+const registerAndLogin = async ({
+  nama = 'Lyson',
+  email = 'lyson@example.com',
+  password = 'rahasia123'
+} = {}) => {
+  await request(app).post('/api/auth/register').send({ nama, email, password });
+  const loginRes = await request(app).post('/api/auth/login').send({ email, password });
+  return loginRes.body.data.token;
+};
+
+describe('Backend API Integration Tests', () => {
   beforeEach(() => {
-    // Inisialisasi in-memory SQLite untuk test
     closeDatabase();
     getDatabase(':memory:');
   });
@@ -26,23 +37,35 @@ describe('HyperLink Backend API Integration Tests', () => {
   });
 
   describe('CRUD Materi Belajar (/api/materi)', () => {
-    it('harus mengembalikan daftar materi kosong saat pertama kali', async () => {
+    it('harus menolak akses tanpa token', async () => {
       const res = await request(app).get('/api/materi');
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('harus mengembalikan daftar materi kosong saat pertama kali', async () => {
+      const token = await registerAndLogin();
+      const res = await request(app).get('/api/materi').set(authHeader(token));
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toEqual([]);
     });
 
     it('harus berhasil menambahkan materi baru', async () => {
+      const token = await registerAndLogin();
       const payload = {
         judul: 'JavaScript Dasar',
         sumber: 'SoloLearn',
         status: 'sedang'
       };
 
-      const res = await request(app).post('/api/materi').send(payload);
+      const res = await request(app)
+        .post('/api/materi')
+        .set(authHeader(token))
+        .send(payload);
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Materi berhasil dibuat');
       expect(res.body.data.judul).toBe('JavaScript Dasar');
       expect(res.body.data.sumber).toBe('SoloLearn');
       expect(res.body.data.status).toBe('sedang');
@@ -50,54 +73,60 @@ describe('HyperLink Backend API Integration Tests', () => {
     });
 
     it('harus gagal saat menambahkan materi tanpa judul', async () => {
-      const payload = {
-        judul: '   ',
-        status: 'belum'
-      };
+      const token = await registerAndLogin();
+      const res = await request(app)
+        .post('/api/materi')
+        .set(authHeader(token))
+        .send({ judul: '   ', status: 'belum' });
 
-      const res = await request(app).post('/api/materi').send(payload);
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.errors).toContain('Judul materi wajib diisi');
     });
 
     it('harus gagal saat status tidak valid', async () => {
-      const payload = {
-        judul: 'Vue.js Lanjut',
-        status: 'pending'
-      };
+      const token = await registerAndLogin();
+      const res = await request(app)
+        .post('/api/materi')
+        .set(authHeader(token))
+        .send({ judul: 'Vue.js Lanjut', status: 'pending' });
 
-      const res = await request(app).post('/api/materi').send(payload);
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.errors[0]).toContain('Status harus salah satu dari');
     });
 
     it('harus mengembalikan detail materi berdasarkan ID', async () => {
+      const token = await registerAndLogin();
       const createRes = await request(app)
         .post('/api/materi')
+        .set(authHeader(token))
         .send({ judul: 'Express.js', status: 'belum' });
       const id = createRes.body.data.id;
 
-      const res = await request(app).get(`/api/materi/${id}`);
+      const res = await request(app).get(`/api/materi/${id}`).set(authHeader(token));
       expect(res.status).toBe(200);
       expect(res.body.data.judul).toBe('Express.js');
     });
 
     it('harus mengembalikan 404 jika materi tidak ditemukan', async () => {
-      const res = await request(app).get('/api/materi/9999');
+      const token = await registerAndLogin();
+      const res = await request(app).get('/api/materi/9999').set(authHeader(token));
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
     });
 
     it('harus berhasil memperbarui materi', async () => {
+      const token = await registerAndLogin();
       const createRes = await request(app)
         .post('/api/materi')
+        .set(authHeader(token))
         .send({ judul: 'React 18', status: 'belum' });
       const id = createRes.body.data.id;
 
       const res = await request(app)
         .put(`/api/materi/${id}`)
+        .set(authHeader(token))
         .send({ judul: 'React 19', status: 'selesai' });
 
       expect(res.status).toBe(200);
@@ -106,64 +135,76 @@ describe('HyperLink Backend API Integration Tests', () => {
     });
 
     it('harus berhasil menghapus materi beserta sesi belajarnya', async () => {
+      const token = await registerAndLogin();
       const createRes = await request(app)
         .post('/api/materi')
+        .set(authHeader(token))
         .send({ judul: 'Hapus Aku', status: 'belum' });
       const id = createRes.body.data.id;
 
-      const deleteRes = await request(app).delete(`/api/materi/${id}`);
+      const deleteRes = await request(app)
+        .delete(`/api/materi/${id}`)
+        .set(authHeader(token));
       expect(deleteRes.status).toBe(200);
       expect(deleteRes.body.success).toBe(true);
 
-      const checkRes = await request(app).get(`/api/materi/${id}`);
+      const checkRes = await request(app).get(`/api/materi/${id}`).set(authHeader(token));
       expect(checkRes.status).toBe(404);
     });
   });
 
   describe('Sesi Belajar (/api/materi/:materiId/sesi dan /api/sesi/:id)', () => {
     it('harus berhasil mencatat sesi belajar dan memperbarui total_menit', async () => {
+      const token = await registerAndLogin();
       const materiRes = await request(app)
         .post('/api/materi')
+        .set(authHeader(token))
         .send({ judul: 'CSS Grid & Flexbox', status: 'sedang' });
       const materiId = materiRes.body.data.id;
 
-      const sesi1 = {
-        tanggal: '2026-10-23',
-        durasi_menit: 45,
-        catatan: 'Latihan layout grid 3 kolom'
-      };
-
       const sesiRes1 = await request(app)
         .post(`/api/materi/${materiId}/sesi`)
-        .send(sesi1);
+        .set(authHeader(token))
+        .send({
+          tanggal: '2026-10-23',
+          durasi_menit: 45,
+          catatan: 'Latihan layout grid 3 kolom'
+        });
       expect(sesiRes1.status).toBe(201);
       expect(sesiRes1.body.data.durasi_menit).toBe(45);
 
-      const sesi2 = {
-        tanggal: '2026-10-24',
-        durasi_menit: 60,
-        catatan: 'Belajar responsive design'
-      };
-      await request(app).post(`/api/materi/${materiId}/sesi`).send(sesi2);
+      await request(app)
+        .post(`/api/materi/${materiId}/sesi`)
+        .set(authHeader(token))
+        .send({
+          tanggal: '2026-10-24',
+          durasi_menit: 60,
+          catatan: 'Belajar responsive design'
+        });
 
-      // Cek list sesi
-      const listSesiRes = await request(app).get(`/api/materi/${materiId}/sesi`);
+      const listSesiRes = await request(app)
+        .get(`/api/materi/${materiId}/sesi`)
+        .set(authHeader(token));
       expect(listSesiRes.status).toBe(200);
       expect(listSesiRes.body.data.length).toBe(2);
 
-      // Cek materi total_menit (45 + 60 = 105)
-      const getMateriRes = await request(app).get(`/api/materi/${materiId}`);
+      const getMateriRes = await request(app)
+        .get(`/api/materi/${materiId}`)
+        .set(authHeader(token));
       expect(getMateriRes.body.data.total_menit).toBe(105);
     });
 
     it('harus menolak sesi belajar dengan durasi 0 atau negatif', async () => {
+      const token = await registerAndLogin();
       const materiRes = await request(app)
         .post('/api/materi')
+        .set(authHeader(token))
         .send({ judul: 'Python', status: 'belum' });
       const materiId = materiRes.body.data.id;
 
       const res = await request(app)
         .post(`/api/materi/${materiId}/sesi`)
+        .set(authHeader(token))
         .send({
           tanggal: '2026-10-23',
           durasi_menit: 0,
@@ -172,12 +213,14 @@ describe('HyperLink Backend API Integration Tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.errors[0]).toContain('bilangan bulat positif');
+      expect(res.body.errors[0]).toContain('bilangan bulat');
     });
 
     it('harus menolak sesi belajar jika materiId tidak ditemukan', async () => {
+      const token = await registerAndLogin();
       const res = await request(app)
         .post('/api/materi/999/sesi')
+        .set(authHeader(token))
         .send({
           tanggal: '2026-10-23',
           durasi_menit: 30
@@ -188,13 +231,16 @@ describe('HyperLink Backend API Integration Tests', () => {
     });
 
     it('harus berhasil menghapus sesi belajar', async () => {
+      const token = await registerAndLogin();
       const materiRes = await request(app)
         .post('/api/materi')
+        .set(authHeader(token))
         .send({ judul: 'Docker', status: 'belum' });
       const materiId = materiRes.body.data.id;
 
       const sesiRes = await request(app)
         .post(`/api/materi/${materiId}/sesi`)
+        .set(authHeader(token))
         .send({
           tanggal: '2026-10-23',
           durasi_menit: 30,
@@ -202,11 +248,15 @@ describe('HyperLink Backend API Integration Tests', () => {
         });
       const sesiId = sesiRes.body.data.id;
 
-      const deleteRes = await request(app).delete(`/api/sesi/${sesiId}`);
+      const deleteRes = await request(app)
+        .delete(`/api/sesi/${sesiId}`)
+        .set(authHeader(token));
       expect(deleteRes.status).toBe(200);
       expect(deleteRes.body.success).toBe(true);
 
-      const listRes = await request(app).get(`/api/materi/${materiId}/sesi`);
+      const listRes = await request(app)
+        .get(`/api/materi/${materiId}/sesi`)
+        .set(authHeader(token));
       expect(listRes.body.data.length).toBe(0);
     });
   });

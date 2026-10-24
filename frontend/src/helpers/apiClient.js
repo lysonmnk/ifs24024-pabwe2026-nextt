@@ -1,13 +1,23 @@
 import { API_BASE_URL } from '../lib/config.js';
+import { getToken, clearToken } from './tokenStorage.js';
+
+const AUTH_PUBLIC_ENDPOINTS = ['/auth/login', '/auth/register'];
+
+const shouldForceLogout = (endpoint, status) =>
+  status === 401 && !AUTH_PUBLIC_ENDPOINTS.includes(endpoint);
 
 export const apiClient = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = getToken();
+  const { headers: customHeaders, ...restOptions } = options;
+
   const config = {
+    ...restOptions,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers
-    },
-    ...options
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...customHeaders
+    }
   };
 
   try {
@@ -15,6 +25,11 @@ export const apiClient = async (endpoint, options = {}) => {
     const result = await res.json().catch(() => null);
 
     if (!res.ok) {
+      if (shouldForceLogout(endpoint, res.status)) {
+        clearToken();
+        window.dispatchEvent(new Event('auth:logout'));
+      }
+
       const errorMessage =
         result?.message ||
         (result?.errors ? result.errors.join(', ') : `HTTP Error ${res.status}`);

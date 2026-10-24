@@ -1,9 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, GraduationCap } from 'lucide-react';
-import { APP_NAME, STUDENT_NAME, STUDENT_NIM } from '../../lib/config.js';
+import { BookOpen, LogOut } from 'lucide-react';
+import { APP_NAME } from '../../lib/config.js';
+import { useAuth } from '../../features/auth/hooks/useAuth.js';
+import { Button } from '../common/Button.jsx';
 
 export const Navbar = () => {
+  const { user, logout, isAuthenticated } = useAuth();
+
   return (
     <header className="navbar-container">
       <div className="navbar-content">
@@ -13,16 +17,22 @@ export const Navbar = () => {
           </div>
           <div>
             <h1 className="brand-title">{APP_NAME}</h1>
-            <p className="brand-subtitle">Catatan Materi & Sesi Belajar Pemrograman</p>
+            <p className="navbar-subtitle">Catatan Materi & Sesi Belajar Pemrograman</p>
           </div>
         </Link>
-        <div className="student-badge">
-          <GraduationCap size={18} className="student-icon" />
-          <div className="student-info">
-            <span className="student-name">{STUDENT_NAME}</span>
-            <span className="student-nim">{STUDENT_NIM} &bull; PABWE 2026</span>
+
+        {isAuthenticated && (
+          <div className="navbar-user">
+            <div className="student-info">
+              <span className="student-name">{user.nama}</span>
+              <span className="student-nim">{user.email}</span>
+            </div>
+            <Button variant="secondary" onClick={logout} aria-label="Keluar">
+              <LogOut size={16} />
+              <span>Keluar</span>
+            </Button>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );

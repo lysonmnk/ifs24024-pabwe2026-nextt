@@ -1,10 +1,55 @@
+export const validateLogin = ({ email, password }) => {
+  const errors = {};
+
+  if (!email || !email.trim()) {
+    errors.email = 'Email wajib diisi';
+  }
+
+  if (!password) {
+    errors.password = 'Kata sandi wajib diisi';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+export const validateRegister = ({ nama, email, password }) => {
+  const errors = {};
+
+  if (!nama || !nama.trim()) {
+    errors.nama = 'Nama lengkap wajib diisi';
+  } else if (nama.trim().length < 2 || nama.trim().length > 50) {
+    errors.nama = 'Nama harus berisi antara 2 hingga 50 karakter';
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !email.trim()) {
+    errors.email = 'Email wajib diisi';
+  } else if (!emailRegex.test(email.trim())) {
+    errors.email = 'Format email tidak valid';
+  }
+
+  if (!password) {
+    errors.password = 'Kata sandi wajib diisi';
+  } else if (password.length < 8) {
+    errors.password = 'Kata sandi minimal 8 karakter';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
 export const validateMateri = ({ judul, status }) => {
   const errors = {};
 
   if (!judul || !judul.trim()) {
     errors.judul = 'Judul materi wajib diisi';
-  } else if (judul.trim().length > 255) {
-    errors.judul = 'Judul maksimal 255 karakter';
+  } else if (judul.trim().length > 100) {
+    errors.judul = 'Judul maksimal 100 karakter';
   }
 
   const validStatuses = ['belum', 'sedang', 'selesai'];

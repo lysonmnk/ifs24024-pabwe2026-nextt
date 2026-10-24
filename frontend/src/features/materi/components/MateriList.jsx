@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { MateriCard } from './MateriCard.jsx';
 import { Button } from '../../../components/common/Button.jsx';
+import { EmptyState } from '../../../components/common/EmptyState.jsx';
 
 export const MateriList = ({
   materiList = [],
@@ -12,20 +13,20 @@ export const MateriList = ({
 }) => {
   if (materiList.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">📚</div>
-        <h3>Tidak Ada Materi Belajar</h3>
-        <p>
-          {hasFilter
+      <EmptyState
+        title="Tidak Ada Materi Belajar"
+        message={
+          hasFilter
             ? 'Tidak ditemukan materi yang cocok dengan pencarian atau filter.'
-            : 'Belum ada materi belajar yang ditambahkan. Mulai dengan menambahkan materi pertamamu!'}
-        </p>
+            : 'Belum ada materi belajar yang ditambahkan. Mulai dengan menambahkan materi pertamamu!'
+        }
+      >
         {!hasFilter && onAddNew && (
           <Button variant="primary" onClick={onAddNew}>
             <Plus size={16} /> Tambah Materi Sekarang
           </Button>
         )}
-      </div>
+      </EmptyState>
     );
   }
 
