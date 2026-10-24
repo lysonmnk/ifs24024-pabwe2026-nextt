@@ -8,7 +8,10 @@ const require = createRequire(import.meta.url);
 const getDatabaseClass = () => {
   try {
     const mod = require('better-sqlite3');
-    return mod.default || mod;
+    const Database = mod.default || mod;
+    const probe = new Database(':memory:');
+    probe.close();
+    return Database;
   } catch {
     const { DatabaseSync } = require('node:sqlite');
     return DatabaseSync;
