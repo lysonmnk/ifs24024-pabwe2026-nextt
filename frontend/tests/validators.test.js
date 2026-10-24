@@ -29,6 +29,16 @@ describe('Frontend Validators Tests', () => {
       expect(res.isValid).toBe(false);
       expect(res.errors.status).toBe('Status tidak valid');
     });
+
+    it('harus invalid jika sumber melebihi 100 karakter', () => {
+      const res = validateMateri({
+        judul: 'Belajar Python',
+        status: 'belum',
+        sumber: 'a'.repeat(101)
+      });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.sumber).toBe('Sumber materi maksimal 100 karakter');
+    });
   });
 
   describe('validateSesi', () => {
@@ -48,6 +58,15 @@ describe('Frontend Validators Tests', () => {
       });
       expect(res.isValid).toBe(false);
       expect(res.errors.durasi_menit).toContain('positif');
+    });
+
+    it('harus invalid jika durasi melebihi 1440 menit', () => {
+      const res = validateSesi({
+        tanggal: '2026-10-23',
+        durasi_menit: 1500
+      });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.durasi_menit).toBe('Durasi maksimal 1440 menit (24 jam)');
     });
 
     it('harus invalid jika tanggal kosong', () => {
