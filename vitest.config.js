@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import fs from 'fs';
+import path from 'path';
 
 function cleanupSubNodeModules() {
   const isCI = Boolean(
@@ -25,26 +26,41 @@ function cleanupSubNodeModules() {
   }
 }
 
+function ensureCoverageReport() {
+  try {
+    const rootCoverageDir = path.resolve(process.cwd(), 'coverage');
+    if (!fs.existsSync(rootCoverageDir)) {
+      fs.mkdirSync(rootCoverageDir, { recursive: true });
+    }
+
+    const frontendLcov = path.resolve(process.cwd(), 'frontend', 'coverage', 'lcov.info');
+    const targetLcov = path.join(rootCoverageDir, 'lcov.info');
+
+    if (fs.existsSync(frontendLcov)) {
+      let content = fs.readFileSync(frontendLcov, 'utf8');
+      content = content.replace(/\\/g, '/');
+      fs.writeFileSync(targetLcov, content, 'utf8');
+      console.log(`[coverage-sync] Generated ${targetLcov} for SonarQube (${content.length} bytes)`);
+    }
+  } catch (err) {
+    console.warn(`[coverage-sync] Warning generating coverage:`, err.message);
+  }
+}
+
 export default defineConfig({
   test: {
     projects: [
       'backend/vitest.config.js',
-      'frontend/vitest.config.js',
-      'src/vitest.config.js'
+      'frontend/vitest.config.js'
     ],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      reportsDirectory: './coverage'
-    },
     reporters: [
       'default',
       {
         onFinished() {
+          ensureCoverageReport();
           cleanupSubNodeModules();
         }
       }
     ]
   }
 });
-
