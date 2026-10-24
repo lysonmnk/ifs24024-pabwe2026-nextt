@@ -5,6 +5,7 @@ pipeline {
     options {
         timestamps()
         skipDefaultCheckout(true)
+        // Stop later stages if a publisher marks the build UNSTABLE/FAILURE mid-run
         skipStagesAfterUnstable()
     }
 
@@ -43,23 +44,7 @@ pipeline {
 
                     echo "=== Installing Dependencies ==="
 
-                    if [ -f package.json ]; then
-                        bun install || true
-                    fi
-
-                    if [ -d backend ]; then
-                        echo "=== Installing backend dependencies ==="
-                        cd backend
-                        bun install
-                        cd ..
-                    fi
-
-                    if [ -d frontend ]; then
-                        echo "=== Installing frontend dependencies ==="
-                        cd frontend
-                        bun install
-                        cd ..
-                    fi
+                    bun install
 
                     echo "=== Dependencies Installed ==="
                 '''
@@ -83,24 +68,12 @@ pipeline {
 
                     echo "=== Running Tests with Coverage ==="
 
-                    if [ -d backend ]; then
-                        echo "=== Backend tests ==="
-                        cd backend
-                        npm test -- --coverage || npx vitest run --coverage
-                        cd ..
-                    fi
-
-                    if [ -d frontend ]; then
-                        echo "=== Frontend tests ==="
-                        cd frontend
-                        if [ -f angular.json ]; then
-                            echo "Framework: Angular"
-                            npx ng test --coverage
-                        else
-                            echo "Framework: React / Vite"
-                            npx vitest run --coverage
-                        fi
-                        cd ..
+                    if [ -f angular.json ]; then
+                        echo "Framework: Angular"
+                        npx ng test --coverage
+                    else
+                        echo "Framework: React, Next.js, Vue, Nuxt, Svelte, or SvelteKit"
+                        npx vitest run --coverage
                     fi
 
                     echo "=== Tests Passed ==="
@@ -156,6 +129,9 @@ pipeline {
 
             post {
                 always {
+                    // failOnError must be false: otherwise Warnings NG can mark the
+                    // whole build FAILURE while later stages still run (all green, badge red).
+                    // Build failure on HIGH/CRITICAL comes from trivy --exit-code 1 above.
                     recordIssues(
                         enabledForFailure: true,
                         failOnError: false,
@@ -235,13 +211,10 @@ pipeline {
 
                     zip -r latest-app.zip . \
                         -x "node_modules/*" \
-                        -x "*/node_modules/*" \
                         -x ".git/*" \
                         -x ".env" \
                         -x ".env.*" \
-                        -x "*/.env" \
                         -x "coverage/*" \
-                        -x "*/coverage/*" \
                         -x ".next/*" \
                         -x "out/*" \
                         -x ".nuxt/*" \
@@ -249,9 +222,7 @@ pipeline {
                         -x ".svelte-kit/*" \
                         -x ".angular/*" \
                         -x "dist/*" \
-                        -x "*/dist/*" \
                         -x "build/*" \
-                        -x "backend/data/*" \
                         -x ".trivy-cache/*" \
                         -x "latest-app.zip" \
                         -x "trivy-results.sarif" \
@@ -275,6 +246,10 @@ pipeline {
 
             steps {
 
+                // ========================================================
+                // 1. ARCHIVE ARTIFACT KE JENKINS
+                // ========================================================
+
                 archiveArtifacts(
                     artifacts: 'latest-app.zip',
                     fingerprint: true,
@@ -282,6 +257,10 @@ pipeline {
                 )
 
                 script {
+
+                    // ====================================================
+                    // 2. BUAT IDENTITAS APPLICATION
+                    // ====================================================
 
                     def appName = env.JOB_NAME
                         .replaceAll('[^a-zA-Z0-9._-]', '-')
@@ -292,6 +271,10 @@ pipeline {
 
                     echo "Application Name: ${appName}"
                     echo "Build ID: ${buildId}"
+
+                    // ====================================================
+                    // 3. COPY KE USER CONTENT
+                    // ====================================================
 
                     sh """
                         set -e
@@ -314,6 +297,10 @@ pipeline {
                             ls -lh \
                             "/var/jenkins_home/userContent/applications/${appName}/${buildId}/latest-app.zip"
                     """
+
+                    // ====================================================
+                    // 4. BUAT PUBLIC ARTIFACT URL
+                    // ====================================================
 
                     def jenkinsBaseUrl = env.BUILD_URL
                         .substring(0, env.BUILD_URL.indexOf('/job/'))
@@ -354,6 +341,10 @@ pipeline {
                     echo "Artifact URL:"
                     echo "${env.ARTIFACT_URL}"
 
+                    // ==================================================
+                    // 1. REQUEST REDEPLOYMENT
+                    // ==================================================
+
                     echo ""
                     echo "=== Request Redeployment ==="
 
@@ -376,6 +367,10 @@ pipeline {
 
                     echo "Redeploy Response:"
                     echo redeployResponse
+
+                    // ==================================================
+                    // 2. POLLING DEPLOYMENT PROGRESS
+                    // ==================================================
 
                     echo ""
                     echo "=== Waiting For Deployment ==="
@@ -419,6 +414,10 @@ pipeline {
                         echo "Progress Response:"
                         echo progressResponse
 
+                        // ==================================================
+                        // PARSE JSON
+                        // ==================================================
+
                         def json = readJSON text: progressResponse
 
                         deploymentStatus = json?.data?.status
@@ -433,21 +432,29 @@ pipeline {
 
                         echo "Deployment Status: ${deploymentStatus}"
 
+                        // ==================================================
+                        // SUCCESS
+                        // ==================================================
+
                         if (deploymentStatus == 'SUCCESS') {
 
                             echo ""
                             echo "=========================================="
-                            echo "       DEPLOYMENT SUCCESS"
+                            echo "       ✅ DEPLOYMENT SUCCESS"
                             echo "=========================================="
 
                             break
                         }
 
+                        // ==================================================
+                        // FAIL
+                        // ==================================================
+
                         if (deploymentStatus == 'FAIL') {
 
                             echo ""
                             echo "=========================================="
-                            echo "       DEPLOYMENT FAILED"
+                            echo "       ❌ DEPLOYMENT FAILED"
                             echo "=========================================="
 
                             def deploymentLog =
@@ -464,6 +471,10 @@ pipeline {
                                 "${WEBSITE_ID}"
                             )
                         }
+
+                        // ==================================================
+                        // OTHER STATUS
+                        // ==================================================
 
                         echo "Deployment masih berjalan..."
                     }
@@ -491,16 +502,16 @@ pipeline {
 
         success {
             echo "=========================================="
-            echo "       PIPELINE SUCCESS"
+            echo "       ✅ PIPELINE SUCCESS"
             echo "=========================================="
             echo "Result: ${currentBuild.currentResult}"
-            echo "Artifact: ${env.ARTIFACT_URL ?: '(not published)'}"
-            echo "Website berhasil dideploy."
+            echo "📦 Artifact: ${env.ARTIFACT_URL ?: '(not published)'}"
+            echo "🚀 Website berhasil dideploy."
         }
 
         failure {
             echo "=========================================="
-            echo "       PIPELINE FAILED"
+            echo "       ❌ PIPELINE FAILED"
             echo "=========================================="
             echo "Result: ${currentBuild.currentResult}"
             echo "Periksa log stage yang merah / Console Output untuk penyebab gagal."
@@ -508,7 +519,7 @@ pipeline {
 
         unstable {
             echo "=========================================="
-            echo "       PIPELINE UNSTABLE"
+            echo "       ⚠️ PIPELINE UNSTABLE"
             echo "=========================================="
             echo "Result: ${currentBuild.currentResult}"
         }
