@@ -95,10 +95,23 @@ pipeline {
                             echo "Framework: Angular"
                             npx ng test --coverage
                         else
+<<<<<<< HEAD
                             echo "Framework: React / Vite"
                             npx vitest run --coverage
                         fi
                         cd ..
+=======
+                            echo "Framework: React, Next.js, Vue, Nuxt, Svelte, or SvelteKit"
+                            npx vitest run --coverage
+                        fi
+                        cd ..
+                    elif [ -f angular.json ]; then
+                        echo "Framework: Angular"
+                        npx ng test --coverage
+                    else
+                        echo "Framework: React, Next.js, Vue, Nuxt, Svelte, or SvelteKit"
+                        npx vitest run --coverage
+>>>>>>> parent of da3c77d (oke)
                     fi
 
                     echo "=== Tests Passed ==="
