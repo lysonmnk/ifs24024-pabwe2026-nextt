@@ -5,6 +5,13 @@ import { DB_PATH } from './env.js';
 
 const require = createRequire(import.meta.url);
 
+/**
+ * Mendeteksi dan menginisialisasi driver SQLite yang kompatibel secara polimorfik.
+ * Mengutamakan `better-sqlite3` untuk performa tinggi dengan fallback ke driver native Node.js
+ * `node:sqlite` (DatabaseSync) jika better-sqlite3 native binary tidak kompatibel pada lingkungan runner.
+ *
+ * @returns {Function} Database constructor class
+ */
 const getDatabaseClass = () => {
   try {
     const mod = require('better-sqlite3');
@@ -20,6 +27,15 @@ const getDatabaseClass = () => {
 
 let dbInstance = null;
 
+/**
+ * Menginisialisasi skema tabel dan integritas relasional database:
+ * 1. Mengaktifkan foreign key constraints (PRAGMA foreign_keys = ON).
+ * 2. Membuat tabel `users` (id, nama, email UNIQUE, password_hash, created_at).
+ * 3. Membuat tabel `materi` dengan foreign key ke users dan batasan check status.
+ * 4. Membuat tabel `sesi_belajar` dengan foreign key ke materi dan batasan durasi_menit > 0.
+ *
+ * @param {Object} db - Database driver instance
+ */
 export const initTables = (db) => {
   db.exec('PRAGMA foreign_keys = ON;');
 
@@ -63,6 +79,13 @@ export const initTables = (db) => {
   db.exec(createSesiTable);
 };
 
+/**
+ * Mengambil singleton instance koneksi database aktif.
+ * Otomatis membuat folder direktori database jika belum tersedia di filesystem.
+ *
+ * @param {string|null} [customPath=null] - Path database kustom (opsional, untuk isolasi test suite)
+ * @returns {Object} Database singleton connection instance
+ */
 export const getDatabase = (customPath = null) => {
   if (dbInstance) {
     return dbInstance;
@@ -83,12 +106,21 @@ export const getDatabase = (customPath = null) => {
   return dbInstance;
 };
 
+/**
+ * Menyuntikkan instance database kustom (digunakan dalam in-memory testing).
+ *
+ * @param {Object} db - Database instance
+ * @returns {Object} Injected database instance
+ */
 export const setDatabase = (db) => {
   dbInstance = db;
   initTables(dbInstance);
   return dbInstance;
 };
 
+/**
+ * Menutup koneksi database dan membersihkan singleton instance.
+ */
 export const closeDatabase = () => {
   if (dbInstance) {
     dbInstance.close();

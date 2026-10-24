@@ -2,6 +2,21 @@ import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/env.js';
 import { sendError } from '../utils/response.js';
 
+/**
+ * Middleware Autentikasi JSON Web Token (JWT).
+ * Melindungi rute privat dengan memvalidasi Bearer Token pada header HTTP Authorization.
+ *
+ * Alur Kerja Keamanan:
+ * 1. Mengekstrak header `Authorization`.
+ * 2. Memeriksa format skema `Bearer <token>`. Jika tidak ada/salah, menolak dengan 401 Unauthorized.
+ * 3. Memverifikasi integritas kriptografis token menggunakan JWT_SECRET.
+ * 4. Menangani kasus token kedaluwarsa (`TokenExpiredError`) secara spesifik dan ramah pengguna.
+ * 5. Menyuntikkan decoded payload pengguna ke `req.user` untuk digunakan oleh controller dan service layer berikutnya.
+ *
+ * @param {import('express').Request} req - Express request object
+ * @param {import('express').Response} res - Express response object
+ * @param {import('express').NextFunction} next - Express next middleware
+ */
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 

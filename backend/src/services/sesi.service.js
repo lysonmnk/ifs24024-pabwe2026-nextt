@@ -2,47 +2,47 @@ import { sesiRepository } from '../repositories/sesi.repository.js';
 import { materiService } from './materi.service.js';
 import { AppError } from '../utils/app-error.js';
 import { parseId } from '../utils/parse-id.js';
+import { validateSesi } from '../utils/validators.js';
 
+/**
+ * Service untuk mengelola log riwayat sesi belajar.
+ * Menegakkan verifikasi kepemilikan relasional antara materi belajar dan sesi belajar,
+ * serta memvalidasi tanggal kalender dan batasan durasi belajar harian.
+ */
 export class SesiService {
+  /**
+   * @param {import('../repositories/sesi.repository.js').SesiRepository} sesiRepo - Dependensi repository sesi
+   * @param {import('./materi.service.js').MateriService} mService - Dependensi service materi
+   */
   constructor(sesiRepo = sesiRepository, mService = materiService) {
     this.sesiRepo = sesiRepo;
     this.mService = mService;
   }
 
+  /**
+   * Memvalidasi input sesi belajar menggunakan modul validator terpusat.
+   *
+   * @param {Object} payload - Objek input sesi
+   * @param {string} payload.tanggal - Tanggal sesi (YYYY-MM-DD)
+   * @param {number|string} payload.durasi_menit - Durasi dalam menit (1-1440)
+   * @param {string} [payload.catatan] - Catatan ringkasan sesi
+   * @throws {AppError} Jika format tanggal atau rentang durasi tidak valid
+   */
   validateSesiInput({ tanggal, durasi_menit, catatan }) {
-    const errors = [];
-
-    // Format YYYY-MM-DD check
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!tanggal || typeof tanggal !== 'string' || tanggal.trim() === '') {
-      errors.push('Tanggal sesi wajib diisi');
-    } else if (!dateRegex.test(tanggal.trim())) {
-      errors.push('Format tanggal harus YYYY-MM-DD');
-    } else {
-      const parsed = new Date(tanggal.trim());
-      if (isNaN(parsed.getTime())) {
-        errors.push('Tanggal tidak valid');
-      }
-    }
-
-    const durasi = Number(durasi_menit);
-    if (durasi_menit === undefined || durasi_menit === null || isNaN(durasi)) {
-      errors.push('Durasi menit wajib diisi dengan angka');
-    } else if (!Number.isInteger(durasi) || durasi < 1 || durasi > 1440) {
-      errors.push('Durasi menit harus berupa bilangan bulat antara 1 hingga 1440');
-    }
-
-    if (catatan !== undefined && catatan !== null && typeof catatan !== 'string') {
-      errors.push('Catatan harus berupa teks');
-    } else if (catatan && typeof catatan === 'string' && catatan.trim().length > 500) {
-      errors.push('Catatan maksimal 500 karakter');
-    }
-
-    if (errors.length > 0) {
+    const { isValid, errors } = validateSesi({ tanggal, durasi_menit, catatan });
+    if (!isValid) {
       throw new AppError('Validasi sesi gagal', 400, errors);
     }
   }
 
+  /**
+   * Mengambil riwayat sesi belajar dari suatu materi tertentu.
+   * Memastikan materi tersebut adalah milik user yang sedang login sebelum menampilkan sesi.
+   *
+   * @param {string|number} materiId - ID materi induk
+   * @param {number} userId - ID pengguna pemilik
+   * @returns {Array<Object>} Daftar sesi belajar yang diurutkan descending berdasarkan tanggal
+   */
   getSesiByMateriId(materiId, userId) {
     const numericMateriId = parseId(materiId, 'ID materi');
     // Memastikan materi ada dan milik pengguna (melempar 404 jika bukan milik user)
@@ -51,6 +51,14 @@ export class SesiService {
     return this.sesiRepo.findByMateriId(numericMateriId);
   }
 
+  /**
+   * Mencatat sesi belajar baru pada materi yang ditentukan.
+   *
+   * @param {string|number} materiId - ID materi induk
+   * @param {number} userId - ID pengguna pemilik
+   * @param {Object} data - Payload sesi ({ tanggal, durasi_menit, catatan })
+   * @returns {Object} Data sesi yang baru tersimpan di database
+   */
   createSesi(materiId, userId, data) {
     const numericMateriId = parseId(materiId, 'ID materi');
     // Memastikan materi ada dan milik pengguna
@@ -70,6 +78,14 @@ export class SesiService {
     });
   }
 
+  /**
+   * Menghapus log sesi belajar berdasarkan ID sesi dan kepemilikan pengguna.
+   *
+   * @param {string|number} id - ID sesi yang akan dihapus
+   * @param {number} userId - ID pengguna pemilik
+   * @returns {boolean} True jika berhasil dihapus
+   * @throws {AppError} 404 jika sesi tidak ditemukan atau bukan milik pengguna
+   */
   deleteSesi(id, userId) {
     const numericId = parseId(id, 'ID sesi');
     const existing = this.sesiRepo.findByIdAndUserId(numericId, userId);

@@ -9,7 +9,9 @@ import {
 
 describe('tokenStorage', () => {
   beforeEach(() => {
+    clearToken();
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   it('menyimpan dan membaca token', () => {
@@ -29,5 +31,10 @@ describe('tokenStorage', () => {
     clearToken();
     expect(getToken()).toBeNull();
     expect(getStoredUser()).toBeNull();
+  });
+
+  it('mengutamakan token dari sessionStorage untuk keamanan per-sesi tab', () => {
+    sessionStorage.setItem('catatan_belajar_token', 'session-token');
+    expect(getToken()).toBe('session-token');
   });
 });

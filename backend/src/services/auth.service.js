@@ -3,55 +3,63 @@ import jwt from 'jsonwebtoken';
 import { userRepository } from '../repositories/user.repository.js';
 import { AppError } from '../utils/app-error.js';
 import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/env.js';
+import { validateRegister, validateLogin } from '../utils/validators.js';
 
+/**
+ * Service untuk mengelola logika autentikasi dan otorisasi pengguna.
+ * Menangani pendaftaran (register), verifikasi kredensial (login),
+ * enkripsi kata sandi menggunakan bcrypt (work factor 10),
+ * pembuatan token JSON Web Token (JWT), serta pengambilan profil pengguna.
+ */
 export class AuthService {
+  /**
+   * @param {import('../repositories/user.repository.js').UserRepository} repo - Dependensi user repository
+   */
   constructor(repo = userRepository) {
     this.repo = repo;
   }
 
+  /**
+   * Memvalidasi input pendaftaran akun baru dengan mendelegasikan ke validator terpusat.
+   *
+   * @param {Object} payload
+   * @param {string} payload.nama - Nama lengkap pengguna
+   * @param {string} payload.email - Alamat email pengguna
+   * @param {string} payload.password - Kata sandi plaintext
+   * @throws {AppError} Jika data tidak memenuhi aturan validasi
+   */
   validateRegisterInput({ nama, email, password }) {
-    const errors = [];
-
-    if (!nama || typeof nama !== 'string' || nama.trim() === '') {
-      errors.push('Nama lengkap wajib diisi');
-    } else if (nama.trim().length < 2 || nama.trim().length > 50) {
-      errors.push('Nama harus berisi antara 2 hingga 50 karakter');
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || typeof email !== 'string' || email.trim() === '') {
-      errors.push('Email wajib diisi');
-    } else if (!emailRegex.test(email.trim())) {
-      errors.push('Format email tidak valid');
-    }
-
-    if (!password || typeof password !== 'string') {
-      errors.push('Kata sandi wajib diisi');
-    } else if (password.length < 8) {
-      errors.push('Kata sandi minimal 8 karakter');
-    }
-
-    if (errors.length > 0) {
+    const { isValid, errors } = validateRegister({ nama, email, password });
+    if (!isValid) {
       throw new AppError('Validasi registrasi gagal', 400, errors);
     }
   }
 
+  /**
+   * Memvalidasi kredensial login dengan mendelegasikan ke validator terpusat.
+   *
+   * @param {Object} payload
+   * @param {string} payload.email - Alamat email pengguna
+   * @param {string} payload.password - Kata sandi plaintext
+   * @throws {AppError} Jika email atau password tidak diisi
+   */
   validateLoginInput({ email, password }) {
-    const errors = [];
-
-    if (!email || typeof email !== 'string' || email.trim() === '') {
-      errors.push('Email wajib diisi');
-    }
-
-    if (!password || typeof password !== 'string' || password === '') {
-      errors.push('Kata sandi wajib diisi');
-    }
-
-    if (errors.length > 0) {
+    const { isValid, errors } = validateLogin({ email, password });
+    if (!isValid) {
       throw new AppError('Input tidak valid', 400, errors);
     }
   }
 
+  /**
+   * Mendaftarkan pengguna baru ke dalam sistem:
+   * 1. Validasi sintaksis input (nama, email, panjang sandi).
+   * 2. Pengecekan keunikan email (mencegah duplikasi akun).
+   * 3. Hashing kata sandi secara aman menggunakan bcrypt dengan salt rounds = 10.
+   * 4. Penyimpanan record baru ke database via repository.
+   *
+   * @param {Object} payload - Objek input registrasi
+   * @returns {Promise<{ id: number, nama: string, email: string, created_at: string }>} Profil pengguna terdaftar
+   */
   async register({ nama, email, password }) {
     this.validateRegisterInput({ nama, email, password });
 
@@ -79,6 +87,16 @@ export class AuthService {
     };
   }
 
+  /**
+   * Melakukan verifikasi login pengguna dan menghasilkan JWT:
+   * 1. Validasi input email dan kata sandi.
+   * 2. Pencarian data pengguna di database berdasarkan email.
+   * 3. Komparasi hash kata sandi yang aman dari serangan timing attack menggunakan bcrypt.compare.
+   * 4. Pembuatan token JWT dengan klaim identitas (id, email, nama) dan waktu kedaluwarsa.
+   *
+   * @param {Object} payload - Objek kredensial login
+   * @returns {Promise<{ token: string, user: { id: number, nama: string, email: string } }>} Token akses & data user
+   */
   async login({ email, password }) {
     this.validateLoginInput({ email, password });
 
@@ -114,6 +132,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Mengambil profil pengguna yang terautentikasi berdasarkan user ID.
+   *
+   * @param {number} userId - ID numerik pengguna dari JWT context
+   * @returns {{ id: number, nama: string, email: string, created_at: string }} Data profil pengguna
+   */
   getProfile(userId) {
     const user = this.repo.findById(userId);
     if (!user) {

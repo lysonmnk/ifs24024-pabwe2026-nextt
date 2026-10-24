@@ -1,4 +1,18 @@
-export const validateLogin = ({ email, password }) => {
+/**
+ * Modul Validasi Terpusat Frontend (Frontend Centralized Validators).
+ * Menyediakan aturan validasi input form yang terisolasi dan modular,
+ * selaras dengan skema validasi backend untuk menjaga konsistensi integritas data.
+ */
+
+/**
+ * Memvalidasi form autentikasi login.
+ *
+ * @param {Object} input
+ * @param {string} input.email - Email pengguna
+ * @param {string} input.password - Kata sandi
+ * @returns {{ isValid: boolean, errors: Record<string, string> }} Hasil evaluasi
+ */
+export const validateLogin = ({ email, password } = {}) => {
   const errors = {};
 
   if (!email || !email.trim()) {
@@ -15,7 +29,16 @@ export const validateLogin = ({ email, password }) => {
   };
 };
 
-export const validateRegister = ({ nama, email, password }) => {
+/**
+ * Memvalidasi form pendaftaran akun baru.
+ *
+ * @param {Object} input
+ * @param {string} input.nama - Nama lengkap (2-50 karakter)
+ * @param {string} input.email - Alamat email dengan regex RFC standar
+ * @param {string} input.password - Kata sandi (minimal 8 karakter)
+ * @returns {{ isValid: boolean, errors: Record<string, string> }} Hasil evaluasi
+ */
+export const validateRegister = ({ nama, email, password } = {}) => {
   const errors = {};
 
   if (!nama || !nama.trim()) {
@@ -43,7 +66,15 @@ export const validateRegister = ({ nama, email, password }) => {
   };
 };
 
-export const validateMateri = ({ judul, status }) => {
+/**
+ * Memvalidasi form topik materi pembelajaran.
+ *
+ * @param {Object} input
+ * @param {string} input.judul - Judul materi (1-100 karakter)
+ * @param {string} [input.status] - Status progres ('belum' | 'sedang' | 'selesai')
+ * @returns {{ isValid: boolean, errors: Record<string, string> }} Hasil evaluasi
+ */
+export const validateMateri = ({ judul, status } = {}) => {
   const errors = {};
 
   if (!judul || !judul.trim()) {
@@ -63,7 +94,16 @@ export const validateMateri = ({ judul, status }) => {
   };
 };
 
-export const validateSesi = ({ tanggal, durasi_menit, durasiMenit }) => {
+/**
+ * Memvalidasi form log sesi belajar.
+ *
+ * @param {Object} input
+ * @param {string} input.tanggal - Tanggal sesi belajar (wajib diisi)
+ * @param {number|string} [input.durasi_menit] - Durasi menit (integer > 0)
+ * @param {number|string} [input.durasiMenit] - Alias camelCase durasi menit
+ * @returns {{ isValid: boolean, errors: Record<string, string> }} Hasil evaluasi
+ */
+export const validateSesi = ({ tanggal, durasi_menit, durasiMenit } = {}) => {
   const errors = {};
 
   if (!tanggal || !tanggal.trim()) {
