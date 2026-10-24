@@ -22,10 +22,7 @@ backend/data/
 *.sqlite3
 
 # Test Coverage
-coverage/*
-!coverage/lcov.info
-backend/coverage/
-frontend/coverage/
+coverage/
 .nyc_output/
 
 # Logs
