@@ -1,0 +1,20 @@
+{
+  "name": "ifs24024-pabwe2026-proyek1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Catatan Belajar Ngoding - Proyek 1 PABWE 2026 (Backend + Frontend)",
+  "author": "Lyson Paulus Esar Manik <11S24024>",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "start": "npm run start --prefix backend",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "test": "npm run test --prefix backend && npm run test --prefix frontend",
+    "test:backend": "npm run test --prefix backend",
+    "test:frontend": "npm run test --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
