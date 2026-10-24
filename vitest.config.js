@@ -29,7 +29,8 @@ export default defineConfig({
   test: {
     projects: [
       'backend/vitest.config.js',
-      'frontend/vitest.config.js'
+      'frontend/vitest.config.js',
+      'src/vitest.config.js'
     ],
     coverage: {
       provider: 'v8',
