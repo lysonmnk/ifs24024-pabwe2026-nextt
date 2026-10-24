@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:backend": "npm run test --prefix backend",
-    "test:frontend": "npm run test --prefix frontend"
+    "test:frontend": "npm run test --prefix frontend",
+    "postinstall": "node scripts/cleanup.js || bun scripts/cleanup.js || true"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.0.7",
