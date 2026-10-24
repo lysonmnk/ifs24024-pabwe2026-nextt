@@ -1,144 +1,104 @@
 pipeline {
+
     agent any
 
-<<<<<<< HEAD
-    environment {
-        CI = 'true'
-        SCANNER_HOME = tool 'SonarQube'
-=======
     options {
         timestamps()
         skipDefaultCheckout(true)
+        // Stop later stages if a publisher marks the build UNSTABLE/FAILURE mid-run
         skipStagesAfterUnstable()
->>>>>>> parent of 886720f (Use exact course Jenkinsfile template)
     }
 
     stages {
+
+        // ============================================================
+        // CHECKOUT
+        // ============================================================
         stage('Checkout') {
+            agent {
+                docker {
+                    image 'oven/bun:alpine'
+                    reuseNode true
+                }
+            }
+
             steps {
                 checkout scm
             }
         }
 
+        // ============================================================
+        // INSTALL DEPENDENCIES
+        // ============================================================
         stage('Install Dependencies') {
             agent {
                 docker {
-                    image 'node:20-alpine'
+                    image 'oven/bun:alpine'
                     reuseNode true
                 }
             }
+
             steps {
-<<<<<<< HEAD
-<<<<<<< HEAD
                 sh '''
                     set -e
 
                     echo "=== Installing Dependencies ==="
 
-                    if [ -f package.json ]; then
-                        bun install || true
-                    fi
-
-                    if [ -d backend ]; then
-                        echo "=== Installing backend dependencies ==="
-                        cd backend
-                        bun install
-                        cd ..
-                    fi
-
-                    if [ -d frontend ]; then
-                        echo "=== Installing frontend dependencies ==="
-                        cd frontend
-                        bun install
-                        cd ..
-                    fi
+                    bun install
 
                     echo "=== Dependencies Installed ==="
                 '''
-=======
-                sh 'cd backend && npm ci'
-                sh 'cd frontend && npm ci'
->>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
-=======
-                sh 'cd backend && npm ci'
-                sh 'cd frontend && npm ci'
->>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
             }
         }
 
+        // ============================================================
+        // TEST
+        // ============================================================
         stage('Test') {
             agent {
                 docker {
-                    image 'node:20-alpine'
+                    image 'node:24-alpine'
                     reuseNode true
                 }
             }
+
             steps {
-<<<<<<< HEAD
-<<<<<<< HEAD
                 sh '''
                     set -e
 
                     echo "=== Running Tests with Coverage ==="
 
-                    if [ -d backend ]; then
-                        echo "=== Backend tests ==="
-                        cd backend
-                        npm test -- --coverage || npx vitest run --coverage
-                        cd ..
-                    fi
-
-                    if [ -d frontend ]; then
-                        echo "=== Frontend tests ==="
-                        cd frontend
-                        if [ -f angular.json ]; then
-                            echo "Framework: Angular"
-                            npx ng test --coverage
-                        else
-<<<<<<< HEAD
-                            echo "Framework: React / Vite"
-                            npx vitest run --coverage
-                        fi
-                        cd ..
-=======
-                            echo "Framework: React, Next.js, Vue, Nuxt, Svelte, or SvelteKit"
-                            npx vitest run --coverage
-                        fi
-                        cd ..
-                    elif [ -f angular.json ]; then
+                    if [ -f angular.json ]; then
                         echo "Framework: Angular"
                         npx ng test --coverage
                     else
                         echo "Framework: React, Next.js, Vue, Nuxt, Svelte, or SvelteKit"
                         npx vitest run --coverage
->>>>>>> parent of da3c77d (oke)
                     fi
 
                     echo "=== Tests Passed ==="
                 '''
-=======
-                sh 'cd backend && npm test'
-                sh 'cd frontend && npm test'
->>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
-=======
-                sh 'cd backend && npm test'
-                sh 'cd frontend && npm test'
->>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
             }
         }
 
+        // ============================================================
+        // TRIVY SECURITY SCAN
+        // ============================================================
         stage('Trivy Security Scan') {
             agent {
                 docker {
-                    image 'aquasec/trivy:latest'
-                    args '-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock'
+                    image 'aquasec/trivy:0.74.0'
                     reuseNode true
+
+                    args '''
+                        --entrypoint=""
+                        -e HOME=/tmp
+                        -e XDG_CACHE_HOME=/tmp/.cache
+                    '''
                 }
             }
+
             steps {
-<<<<<<< HEAD
-                sh 'trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed .'
-=======
                 sh '''
                     set -e
 
@@ -169,6 +129,9 @@ pipeline {
 
             post {
                 always {
+                    // failOnError must be false: otherwise Warnings NG can mark the
+                    // whole build FAILURE while later stages still run (all green, badge red).
+                    // Build failure on HIGH/CRITICAL comes from trivy --exit-code 1 above.
                     recordIssues(
                         enabledForFailure: true,
                         failOnError: false,
@@ -181,36 +144,60 @@ pipeline {
                         ]
                     )
                 }
->>>>>>> parent of 886720f (Use exact course Jenkinsfile template)
             }
         }
 
+        // ============================================================
+        // SONARQUBE ANALYSIS
+        // ============================================================
         stage('SonarQube Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                    reuseNode true
+                    args '--network cicd-network'
+                }
+            }
+
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh "${SCANNER_HOME}/bin/sonar-scanner"
+                    sh '''
+                        set -e
+
+                        echo "=== SonarQube Analysis ==="
+
+                        sonar-scanner
+
+                        echo "=== SonarQube Analysis Completed ==="
+                    '''
                 }
             }
         }
 
+        // ============================================================
+        // QUALITY GATE
+        // ============================================================
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
+                timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
-        stage('Build and Package') {
+        // ============================================================
+        // PACKAGE APPLICATION
+        // ============================================================
+        stage('Package Application') {
             agent {
                 docker {
-                    image 'node:20-alpine'
+                    image 'node:24-alpine'
                     reuseNode true
+                    args '-u root'
                 }
             }
+
             steps {
-<<<<<<< HEAD
-<<<<<<< HEAD
                 sh '''
                     set -e
 
@@ -224,13 +211,10 @@ pipeline {
 
                     zip -r latest-app.zip . \
                         -x "node_modules/*" \
-                        -x "*/node_modules/*" \
                         -x ".git/*" \
                         -x ".env" \
                         -x ".env.*" \
-                        -x "*/.env" \
                         -x "coverage/*" \
-                        -x "*/coverage/*" \
                         -x ".next/*" \
                         -x "out/*" \
                         -x ".nuxt/*" \
@@ -238,9 +222,7 @@ pipeline {
                         -x ".svelte-kit/*" \
                         -x ".angular/*" \
                         -x "dist/*" \
-                        -x "*/dist/*" \
                         -x "build/*" \
-                        -x "backend/data/*" \
                         -x ".trivy-cache/*" \
                         -x "latest-app.zip" \
                         -x "trivy-results.sarif" \
@@ -254,22 +236,19 @@ pipeline {
 
                     unzip -l latest-app.zip
                 '''
-=======
-                sh 'cd frontend && npm run build'
-                sh 'zip -r app.zip . -x "node_modules/*" "*/node_modules/*" ".env" "*/.env" "coverage/*" "*/coverage/*" "backend/data/*" ".git/*"'
->>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
-=======
-                sh 'cd frontend && npm run build'
-                sh 'zip -r app.zip . -x "node_modules/*" "*/node_modules/*" ".env" "*/.env" "coverage/*" "*/coverage/*" "backend/data/*" ".git/*"'
->>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
             }
         }
 
-        stage('Publish Artifact') {
+        // ============================================================
+        // PUBLISH APPLICATION
+        // ============================================================
+        stage('Publish Application') {
+
             steps {
-<<<<<<< HEAD
-                archiveArtifacts artifacts: 'app.zip', fingerprint: true, allowEmptyArchive: true
-=======
+
+                // ========================================================
+                // 1. ARCHIVE ARTIFACT KE JENKINS
+                // ========================================================
 
                 archiveArtifacts(
                     artifacts: 'latest-app.zip',
@@ -278,6 +257,10 @@ pipeline {
                 )
 
                 script {
+
+                    // ====================================================
+                    // 2. BUAT IDENTITAS APPLICATION
+                    // ====================================================
 
                     def appName = env.JOB_NAME
                         .replaceAll('[^a-zA-Z0-9._-]', '-')
@@ -288,6 +271,10 @@ pipeline {
 
                     echo "Application Name: ${appName}"
                     echo "Build ID: ${buildId}"
+
+                    // ====================================================
+                    // 3. COPY KE USER CONTENT
+                    // ====================================================
 
                     sh """
                         set -e
@@ -311,6 +298,10 @@ pipeline {
                             "/var/jenkins_home/userContent/applications/${appName}/${buildId}/latest-app.zip"
                     """
 
+                    // ====================================================
+                    // 4. BUAT PUBLIC ARTIFACT URL
+                    // ====================================================
+
                     def jenkinsBaseUrl = env.BUILD_URL
                         .substring(0, env.BUILD_URL.indexOf('/job/'))
                         .replace('localhost', 'host.docker.internal')
@@ -325,30 +316,23 @@ pipeline {
                     echo "Artifact URL:"
                     echo "${env.ARTIFACT_URL}"
                 }
->>>>>>> parent of 886720f (Use exact course Jenkinsfile template)
             }
         }
 
-        stage('Deploy') {
+        // ============================================================
+        // DEPLOY APPLICATION
+        // ============================================================
+        stage('Deploy Application') {
             agent {
                 docker {
-                    image 'curlimages/curl:latest'
+                    image 'curlimages/curl:8.15.0'
                     reuseNode true
+                    args '--network cicd-network'
                 }
             }
+
             steps {
                 script {
-<<<<<<< HEAD
-                    if (env.URL_REDEPLOY && env.DEPLOY_TOKEN) {
-                        sh '''
-                            curl -s -X POST "${URL_REDEPLOY}" \
-                                 -H "Authorization: Bearer ${DEPLOY_TOKEN}" \
-                                 -H "Content-Type: application/json" \
-                                 -d "{\\"website_id\\": \\"${WEBSITE_ID}\\"}"
-                        '''
-                    } else {
-                        echo 'Deployment variables not set, skipping deployment step.'
-=======
 
                     echo "=========================================="
                     echo "       START APPLICATION DEPLOYMENT"
@@ -356,6 +340,10 @@ pipeline {
 
                     echo "Artifact URL:"
                     echo "${env.ARTIFACT_URL}"
+
+                    // ==================================================
+                    // 1. REQUEST REDEPLOYMENT
+                    // ==================================================
 
                     echo ""
                     echo "=== Request Redeployment ==="
@@ -379,6 +367,10 @@ pipeline {
 
                     echo "Redeploy Response:"
                     echo redeployResponse
+
+                    // ==================================================
+                    // 2. POLLING DEPLOYMENT PROGRESS
+                    // ==================================================
 
                     echo ""
                     echo "=== Waiting For Deployment ==="
@@ -422,6 +414,10 @@ pipeline {
                         echo "Progress Response:"
                         echo progressResponse
 
+                        // ==================================================
+                        // PARSE JSON
+                        // ==================================================
+
                         def json = readJSON text: progressResponse
 
                         deploymentStatus = json?.data?.status
@@ -436,21 +432,29 @@ pipeline {
 
                         echo "Deployment Status: ${deploymentStatus}"
 
+                        // ==================================================
+                        // SUCCESS
+                        // ==================================================
+
                         if (deploymentStatus == 'SUCCESS') {
 
                             echo ""
                             echo "=========================================="
-                            echo "       DEPLOYMENT SUCCESS"
+                            echo "       ✅ DEPLOYMENT SUCCESS"
                             echo "=========================================="
 
                             break
                         }
 
+                        // ==================================================
+                        // FAIL
+                        // ==================================================
+
                         if (deploymentStatus == 'FAIL') {
 
                             echo ""
                             echo "=========================================="
-                            echo "       DEPLOYMENT FAILED"
+                            echo "       ❌ DEPLOYMENT FAILED"
                             echo "=========================================="
 
                             def deploymentLog =
@@ -468,19 +472,28 @@ pipeline {
                             )
                         }
 
+                        // ==================================================
+                        // OTHER STATUS
+                        // ==================================================
+
                         echo "Deployment masih berjalan..."
->>>>>>> parent of 886720f (Use exact course Jenkinsfile template)
                     }
+
+                    echo ""
+                    echo "=========================================="
+                    echo "       DEPLOYMENT FINISHED"
+                    echo "=========================================="
                 }
             }
         }
     }
 
+    // ================================================================
+    // POST ACTIONS
+    // ================================================================
     post {
+
         always {
-<<<<<<< HEAD
-            cleanWs()
-=======
             archiveArtifacts(
                 artifacts: 'trivy-results.sarif',
                 allowEmptyArchive: true
@@ -489,16 +502,16 @@ pipeline {
 
         success {
             echo "=========================================="
-            echo "       PIPELINE SUCCESS"
+            echo "       ✅ PIPELINE SUCCESS"
             echo "=========================================="
             echo "Result: ${currentBuild.currentResult}"
-            echo "Artifact: ${env.ARTIFACT_URL ?: '(not published)'}"
-            echo "Website berhasil dideploy."
+            echo "📦 Artifact: ${env.ARTIFACT_URL ?: '(not published)'}"
+            echo "🚀 Website berhasil dideploy."
         }
 
         failure {
             echo "=========================================="
-            echo "       PIPELINE FAILED"
+            echo "       ❌ PIPELINE FAILED"
             echo "=========================================="
             echo "Result: ${currentBuild.currentResult}"
             echo "Periksa log stage yang merah / Console Output untuk penyebab gagal."
@@ -506,10 +519,9 @@ pipeline {
 
         unstable {
             echo "=========================================="
-            echo "       PIPELINE UNSTABLE"
+            echo "       ⚠️ PIPELINE UNSTABLE"
             echo "=========================================="
             echo "Result: ${currentBuild.currentResult}"
->>>>>>> parent of 886720f (Use exact course Jenkinsfile template)
         }
     }
 }
