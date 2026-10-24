@@ -22,6 +22,7 @@ pipeline {
             }
             steps {
 <<<<<<< HEAD
+<<<<<<< HEAD
                 sh '''
                     set -e
 
@@ -31,6 +32,10 @@ pipeline {
 
                     echo "=== Dependencies Installed ==="
                 '''
+=======
+                sh 'cd backend && npm ci'
+                sh 'cd frontend && npm ci'
+>>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
 =======
                 sh 'cd backend && npm ci'
                 sh 'cd frontend && npm ci'
@@ -47,6 +52,7 @@ pipeline {
             }
             steps {
 <<<<<<< HEAD
+<<<<<<< HEAD
                 sh '''
                     set -e
 
@@ -62,6 +68,10 @@ pipeline {
 
                     echo "=== Tests Passed ==="
                 '''
+=======
+                sh 'cd backend && npm test'
+                sh 'cd frontend && npm test'
+>>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
 =======
                 sh 'cd backend && npm test'
                 sh 'cd frontend && npm test'
@@ -107,6 +117,7 @@ pipeline {
             }
             steps {
 <<<<<<< HEAD
+<<<<<<< HEAD
                 sh '''
                     set -e
 
@@ -145,6 +156,10 @@ pipeline {
 
                     unzip -l latest-app.zip
                 '''
+=======
+                sh 'cd frontend && npm run build'
+                sh 'zip -r app.zip . -x "node_modules/*" "*/node_modules/*" ".env" "*/.env" "coverage/*" "*/coverage/*" "backend/data/*" ".git/*"'
+>>>>>>> parent of 14bb961 (Merge branch 'main' of https://github.com/lysonmnk/ifs24024-pabwe2026-proyek1)
 =======
                 sh 'cd frontend && npm run build'
                 sh 'zip -r app.zip . -x "node_modules/*" "*/node_modules/*" ".env" "*/.env" "coverage/*" "*/coverage/*" "backend/data/*" ".git/*"'
