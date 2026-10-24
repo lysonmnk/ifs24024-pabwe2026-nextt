@@ -44,23 +44,7 @@ pipeline {
 
                     echo "=== Installing Dependencies ==="
 
-                    if [ -f package.json ]; then
-                        bun install || true
-                    fi
-
-                    if [ -d backend ]; then
-                        echo "=== Installing backend dependencies ==="
-                        cd backend
-                        bun install
-                        cd ..
-                    fi
-
-                    if [ -d frontend ]; then
-                        echo "=== Installing frontend dependencies ==="
-                        cd frontend
-                        bun install
-                        cd ..
-                    fi
+                    bun install
 
                     echo "=== Dependencies Installed ==="
                 '''
@@ -84,25 +68,7 @@ pipeline {
 
                     echo "=== Running Tests with Coverage ==="
 
-                    if [ -d backend ]; then
-                        echo "=== Backend tests ==="
-                        cd backend
-                        npm test -- --coverage || npx vitest run --coverage
-                        cd ..
-                    fi
-
-                    if [ -d frontend ]; then
-                        echo "=== Frontend tests ==="
-                        cd frontend
-                        if [ -f angular.json ]; then
-                            echo "Framework: Angular"
-                            npx ng test --coverage
-                        else
-                            echo "Framework: React, Next.js, Vue, Nuxt, Svelte, or SvelteKit"
-                            npx vitest run --coverage
-                        fi
-                        cd ..
-                    elif [ -f angular.json ]; then
+                    if [ -f angular.json ]; then
                         echo "Framework: Angular"
                         npx ng test --coverage
                     else
@@ -245,13 +211,10 @@ pipeline {
 
                     zip -r latest-app.zip . \
                         -x "node_modules/*" \
-                        -x "*/node_modules/*" \
                         -x ".git/*" \
                         -x ".env" \
                         -x ".env.*" \
-                        -x "*/.env" \
                         -x "coverage/*" \
-                        -x "*/coverage/*" \
                         -x ".next/*" \
                         -x "out/*" \
                         -x ".nuxt/*" \
@@ -259,9 +222,7 @@ pipeline {
                         -x ".svelte-kit/*" \
                         -x ".angular/*" \
                         -x "dist/*" \
-                        -x "*/dist/*" \
                         -x "build/*" \
-                        -x "backend/data/*" \
                         -x ".trivy-cache/*" \
                         -x "latest-app.zip" \
                         -x "trivy-results.sarif" \
