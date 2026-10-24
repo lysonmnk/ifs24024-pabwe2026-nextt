@@ -37,6 +37,39 @@ describe('SesiForm Component tests', () => {
     expect(await screen.findByText('Durasi wajib diisi angka')).toBeInTheDocument();
   });
 
+  it('menampilkan pesan validasi jika durasi kurang dari atau sama dengan 0', async () => {
+    render(
+      <SesiForm isOpen={true} onClose={() => {}} onSubmit={() => {}} />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Durasi \(dalam menit\)/i), {
+      target: { value: '0' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Simpan Sesi/i }));
+
+    expect(
+      await screen.findByText('Durasi harus berupa angka positif (> 0 menit)')
+    ).toBeInTheDocument();
+  });
+
+  it('menampilkan error jika tanggal dikosongkan', async () => {
+    render(
+      <SesiForm isOpen={true} onClose={() => {}} onSubmit={() => {}} />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Tanggal Belajar/i), {
+      target: { value: '' }
+    });
+    fireEvent.change(screen.getByLabelText(/Durasi \(dalam menit\)/i), {
+      target: { value: '30' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Simpan Sesi/i }));
+
+    expect(await screen.findByText('Tanggal sesi wajib diisi')).toBeInTheDocument();
+  });
+
   it('memanggil onSubmit dengan durasi berupa angka', async () => {
     const handleSubmit = vi.fn().mockResolvedValueOnce();
     const handleClose = vi.fn();
@@ -52,7 +85,7 @@ describe('SesiForm Component tests', () => {
     fireEvent.change(screen.getByLabelText(/Durasi \(dalam menit\)/i), {
       target: { value: '45' }
     });
-    fireEvent.change(screen.getByLabelText(/Catatan Sesi/i), {
+    fireEvent.change(screen.getByLabelText(/Catatan Belajar/i), {
       target: { value: 'Latihan Express middleware' }
     });
 
@@ -67,5 +100,39 @@ describe('SesiForm Component tests', () => {
       );
       expect(handleClose).toHaveBeenCalled();
     });
+  });
+
+  it('menampilkan alert server error jika onSubmit gagal', async () => {
+    const handleSubmit = vi.fn().mockRejectedValueOnce(new Error('Gagal mencatat sesi'));
+
+    render(
+      <SesiForm
+        isOpen={true}
+        onClose={() => {}}
+        onSubmit={handleSubmit}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Durasi \(dalam menit\)/i), {
+      target: { value: '60' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Simpan Sesi/i }));
+
+    expect(await screen.findByText('Gagal mencatat sesi')).toBeInTheDocument();
+  });
+
+  it('memanggil onClose saat tombol Batal atau tombol X diklik', () => {
+    const handleClose = vi.fn();
+
+    render(
+      <SesiForm isOpen={true} onClose={handleClose} onSubmit={() => {}} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Batal/i }));
+    expect(handleClose).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByLabelText('Tutup'));
+    expect(handleClose).toHaveBeenCalledTimes(2);
   });
 });

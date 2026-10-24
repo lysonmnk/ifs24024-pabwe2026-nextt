@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import { validateSesi } from '../../../utils/validators.js';
+import { useForm } from '../../../hooks/useForm.js';
 import { Button } from '../../../components/common/Button.jsx';
 
 export const SesiForm = ({
@@ -11,53 +12,42 @@ export const SesiForm = ({
 }) => {
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
-  const [tanggal, setTanggal] = useState(getTodayString());
-  const [durasiMenit, setDurasiMenit] = useState('');
-  const [catatan, setCatatan] = useState('');
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverError, setServerError] = useState('');
+  const {
+    values,
+    errors,
+    serverError,
+    isSubmitting,
+    handleChange,
+    resetForm,
+    handleSubmit
+  } = useForm({
+    initialValues: {
+      tanggal: getTodayString(),
+      durasi_menit: '',
+      catatan: ''
+    },
+    validate: validateSesi,
+    onSubmit: async (formValues) => {
+      await onSubmit({
+        tanggal: formValues.tanggal,
+        durasi_menit: parseInt(formValues.durasi_menit, 10),
+        catatan: formValues.catatan ? formValues.catatan.trim() : null
+      });
+      onClose();
+    }
+  });
 
   useEffect(() => {
     if (isOpen) {
-      setTanggal(getTodayString());
-      setDurasiMenit('');
-      setCatatan('');
-      setErrors({});
-      setServerError('');
+      resetForm({
+        tanggal: getTodayString(),
+        durasi_menit: '',
+        catatan: ''
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, resetForm]);
 
   if (!isOpen) return null;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setServerError('');
-
-    const validation = validateSesi({
-      tanggal,
-      durasi_menit: durasiMenit
-    });
-
-    if (!validation.isValid) {
-      setErrors(validation.errors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        tanggal,
-        durasi_menit: parseInt(durasiMenit, 10),
-        catatan: catatan.trim() || null
-      });
-      onClose();
-    } catch (err) {
-      setServerError(err.message || 'Terjadi kesalahan saat menambahkan sesi');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
@@ -88,7 +78,7 @@ export const SesiForm = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form onSubmit={handleSubmit} className="modal-form" noValidate>
           <div className="form-group">
             <label htmlFor="sesi-tanggal" className="form-label">
               Tanggal Belajar <span className="text-danger">*</span>
@@ -98,11 +88,8 @@ export const SesiForm = ({
               name="tanggal"
               type="date"
               className={`form-input ${errors.tanggal ? 'input-error' : ''}`}
-              value={tanggal}
-              onChange={(e) => {
-                setTanggal(e.target.value);
-                if (errors.tanggal) setErrors((prev) => ({ ...prev, tanggal: null }));
-              }}
+              value={values.tanggal}
+              onChange={handleChange}
             />
             {errors.tanggal && <p className="error-text">{errors.tanggal}</p>}
           </div>
@@ -118,13 +105,9 @@ export const SesiForm = ({
               min="1"
               step="1"
               className={`form-input ${errors.durasi_menit ? 'input-error' : ''}`}
-              placeholder="Contoh: 45 (menit)"
-              value={durasiMenit}
-              onChange={(e) => {
-                setDurasiMenit(e.target.value);
-                if (errors.durasi_menit)
-                  setErrors((prev) => ({ ...prev, durasi_menit: null }));
-              }}
+              placeholder="Contoh: 45"
+              value={values.durasi_menit}
+              onChange={handleChange}
             />
             {errors.durasi_menit && (
               <p className="error-text">{errors.durasi_menit}</p>
@@ -133,16 +116,16 @@ export const SesiForm = ({
 
           <div className="form-group">
             <label htmlFor="sesi-catatan" className="form-label">
-              Catatan Sesi (Opsional)
+              Catatan Belajar (Opsional)
             </label>
             <textarea
               id="sesi-catatan"
               name="catatan"
-              rows="3"
+              rows={3}
               className="form-input form-textarea"
-              placeholder="Contoh: Mempelajari cara kerja custom hooks dan lifecycle"
-              value={catatan}
-              onChange={(e) => setCatatan(e.target.value)}
+              placeholder="Apa saja yang dipelajari pada sesi ini? Contoh: Paham cara kerja useEffect dependency array."
+              value={values.catatan}
+              onChange={handleChange}
             />
           </div>
 

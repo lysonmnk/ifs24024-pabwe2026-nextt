@@ -63,18 +63,21 @@ export const validateMateri = ({ judul, status }) => {
   };
 };
 
-export const validateSesi = ({ tanggal, durasi_menit }) => {
+export const validateSesi = ({ tanggal, durasi_menit, durasiMenit }) => {
   const errors = {};
 
   if (!tanggal || !tanggal.trim()) {
     errors.tanggal = 'Tanggal sesi wajib diisi';
   }
 
-  const durasiNum = Number(durasi_menit);
-  if (durasi_menit === '' || durasi_menit === null || durasi_menit === undefined || isNaN(durasiNum)) {
+  const rawDurasi = durasi_menit !== undefined ? durasi_menit : durasiMenit;
+  const durasiNum = Number(rawDurasi);
+  if (rawDurasi === '' || rawDurasi === null || rawDurasi === undefined || isNaN(durasiNum)) {
     errors.durasi_menit = 'Durasi wajib diisi angka';
+    errors.durasiMenit = 'Durasi wajib diisi angka';
   } else if (!Number.isInteger(durasiNum) || durasiNum <= 0) {
     errors.durasi_menit = 'Durasi harus berupa angka positif (> 0 menit)';
+    errors.durasiMenit = 'Durasi harus berupa angka positif (> 0 menit)';
   }
 
   return {

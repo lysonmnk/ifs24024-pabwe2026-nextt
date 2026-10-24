@@ -7,11 +7,12 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  root: __dirname,
   plugins: [react(), tailwindcss()],
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/setupTests.js',
+    setupFiles: path.resolve(__dirname, 'src/setupTests.js'),
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
