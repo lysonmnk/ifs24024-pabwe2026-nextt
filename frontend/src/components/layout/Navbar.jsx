@@ -16,7 +16,7 @@ export const Navbar = () => {
             <BookOpen size={24} />
           </div>
           <div>
-            <h1 className="brand-title">{APP_NAME}</h1>
+            <span className="brand-title">{APP_NAME}</span>
             <p className="navbar-subtitle">Catatan Materi & Sesi Belajar Pemrograman</p>
           </div>
         </Link>

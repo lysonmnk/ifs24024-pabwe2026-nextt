@@ -67,7 +67,7 @@ export const MateriListPage = () => {
     <div className="page-container">
       <div className="page-header-section">
         <div>
-          <h2 className="section-title">Dashboard Materi Belajar</h2>
+          <h1 className="section-title">Dashboard Materi Belajar</h1>
           <p className="section-subtitle">
             Kelola materi pemrograman dan pantau durasi waktu belajarmu
           </p>
