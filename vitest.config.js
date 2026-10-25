@@ -11,7 +11,7 @@ function cleanupSubNodeModules() {
   );
 
   if (isCI) {
-    const dirs = ['frontend/node_modules', 'backend/node_modules'];
+    const dirs = ['frontend/node_modules'];
     for (const d of dirs) {
       try {
         if (fs.existsSync(d)) {
@@ -62,7 +62,6 @@ function ensureCoverageReport() {
 export default defineConfig({
   test: {
     projects: [
-      'backend/vitest.config.js',
       'frontend/vitest.config.js',
       'src/vitest.config.js'
     ],

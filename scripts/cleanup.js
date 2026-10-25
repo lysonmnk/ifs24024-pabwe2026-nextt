@@ -12,8 +12,7 @@ const isCI = Boolean(
 if (isCI) {
   const rootDir = path.resolve(__dirname, '..');
   const dirs = [
-    path.join(rootDir, 'frontend', 'node_modules'),
-    path.join(rootDir, 'backend', 'node_modules')
+    path.join(rootDir, 'frontend', 'node_modules')
   ];
 
   for (const dir of dirs) {
