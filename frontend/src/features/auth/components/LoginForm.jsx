@@ -49,13 +49,13 @@ export const LoginForm = () => {
       )}
 
       <div className="form-group">
-        <label htmlFor="login-email" className="form-label">
-          Email
+        <label htmlFor="username" className="form-label">
+          Email / Username
         </label>
         <input
-          id="login-email"
+          id="username"
           name="email"
-          type="email"
+          type="text"
           className={`form-input ${errors.email ? 'input-error' : ''}`}
           placeholder="nama@email.com"
           {...email.bind}
@@ -64,11 +64,11 @@ export const LoginForm = () => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="login-password" className="form-label">
+        <label htmlFor="password" className="form-label">
           Kata sandi
         </label>
         <input
-          id="login-password"
+          id="password"
           name="password"
           type="password"
           className={`form-input ${errors.password ? 'input-error' : ''}`}
@@ -78,7 +78,13 @@ export const LoginForm = () => {
         {errors.password && <p className="error-text">{errors.password}</p>}
       </div>
 
-      <Button type="submit" variant="primary" disabled={isSubmitting} className="auth-submit">
+      <Button
+        id="btn-submit"
+        type="submit"
+        variant="primary"
+        disabled={isSubmitting}
+        className="auth-submit"
+      >
         {isSubmitting ? 'Masuk...' : 'Masuk'}
       </Button>
 
