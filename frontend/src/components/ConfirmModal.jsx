@@ -8,8 +8,7 @@ export const ConfirmModal = ({
   title = 'Konfirmasi Hapus',
   message = 'Apakah Anda yakin ingin menghapus data ini?',
   confirmLabel = 'Hapus',
-  isDanger = true,
-  isLoading = false
+  isDanger = true
 }) => {
   if (!isOpen) return null;
 
@@ -23,13 +22,7 @@ export const ConfirmModal = ({
             </div>
             <h2 className="modal-title">{title}</h2>
           </div>
-          <button
-            type="button"
-            className="btn-icon"
-            onClick={onClose}
-            aria-label="Tutup"
-            disabled={isLoading}
-          >
+          <button type="button" className="btn-icon" onClick={onClose} aria-label="Tutup">
             <X size={18} />
           </button>
         </div>
@@ -37,21 +30,15 @@ export const ConfirmModal = ({
         <p className="confirm-message">{message}</p>
 
         <div className="modal-actions">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <button type="button" className="btn btn-secondary" onClick={onClose}>
             Batal
           </button>
           <button
             type="button"
             className={`btn ${isDanger ? 'btn-danger' : 'btn-primary'}`}
             onClick={onConfirm}
-            disabled={isLoading}
           >
-            {isLoading ? 'Menghapus...' : confirmLabel}
+            {confirmLabel}
           </button>
         </div>
       </div>
