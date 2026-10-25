@@ -92,7 +92,7 @@ export const MateriDetailPage = () => {
           </div>
         </div>
 
-        <h1 className="detail-title">{materi.judul}</h1>
+        <h2 className="detail-title">{materi.judul}</h2>
 
         {materi.sumber && (
           <div className="detail-source">

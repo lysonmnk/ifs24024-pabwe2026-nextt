@@ -10,7 +10,7 @@ export const AuthLayout = () => {
         <div className="brand-icon">
           <BookOpen size={24} />
         </div>
-        <div className="brand-title">{APP_NAME}</div>
+        <h1 className="brand-title">{APP_NAME}</h1>
         <p className="auth-brand-copy">
           Catat materi, rekam sesi belajar, dan pantau progres ngodingmu dalam satu aplikasi.
         </p>
