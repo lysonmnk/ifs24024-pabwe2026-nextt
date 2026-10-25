@@ -6,7 +6,7 @@ import { APP_NAME } from '../../lib/config.js';
 export const AuthLayout = () => {
   return (
     <div className="auth-layout">
-      <div className="auth-brand">
+      <header className="auth-brand">
         <div className="brand-icon">
           <BookOpen size={24} />
         </div>
@@ -14,8 +14,10 @@ export const AuthLayout = () => {
         <p className="auth-brand-copy">
           Catat materi, rekam sesi belajar, dan pantau progres ngodingmu dalam satu aplikasi.
         </p>
-      </div>
-      <Outlet />
+      </header>
+      <main className="auth-main">
+        <Outlet />
+      </main>
     </div>
   );
 };

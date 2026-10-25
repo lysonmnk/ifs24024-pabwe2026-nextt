@@ -7,7 +7,7 @@
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
   --text-main: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   --border: #e2e8f0;
   --danger: #ef4444;
   --danger-hover: #dc2626;
@@ -292,7 +292,7 @@ body {
   padding: 0.45rem 0.85rem;
   font-size: 0.825rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #334155;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
