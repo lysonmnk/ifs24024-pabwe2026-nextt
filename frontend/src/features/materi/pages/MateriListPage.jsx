@@ -9,6 +9,7 @@ import { StatsBanner } from '../../../components/StatsBanner.jsx';
 import { Loading } from '../../../components/common/Loading.jsx';
 import { ErrorMessage } from '../../../components/common/ErrorMessage.jsx';
 import { Button } from '../../../components/common/Button.jsx';
+import { showSuccess, showError } from '../../../helpers/dialogHelper.js';
 
 export const MateriListPage = () => {
   const {
@@ -26,6 +27,7 @@ export const MateriListPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMateri, setEditingMateri] = useState(null);
   const [deletingMateri, setDeletingMateri] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredMateri = materiList.filter((item) => {
     const matchesSearch =
@@ -57,9 +59,16 @@ export const MateriListPage = () => {
   };
 
   const handleConfirmDelete = async () => {
-    if (deletingMateri) {
+    if (!deletingMateri) return;
+    setIsDeleting(true);
+    try {
       await deleteMateri(deletingMateri.id);
       setDeletingMateri(null);
+      showSuccess('Materi berhasil dihapus.');
+    } catch (err) {
+      showError(err.message || 'Gagal menghapus materi.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -114,6 +123,7 @@ export const MateriListPage = () => {
         onConfirm={handleConfirmDelete}
         title="Hapus Materi Belajar"
         message={`Materi "${deletingMateri?.judul}" beserta seluruh riwayat sesinya akan dihapus permanen. Lanjutkan?`}
+        isLoading={isDeleting}
       />
     </div>
   );

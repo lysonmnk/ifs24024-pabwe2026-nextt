@@ -9,6 +9,7 @@ import { ConfirmModal } from '../../../components/ConfirmModal.jsx';
 import { Loading } from '../../../components/common/Loading.jsx';
 import { ErrorMessage } from '../../../components/common/ErrorMessage.jsx';
 import { Button } from '../../../components/common/Button.jsx';
+import { showSuccess, showError } from '../../../helpers/dialogHelper.js';
 import { formatDurasi, formatTanggal, getStatusMeta } from '../../../utils/formatters.js';
 
 export const MateriDetailPage = () => {
@@ -27,6 +28,7 @@ export const MateriDetailPage = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [deletingSesi, setDeletingSesi] = useState(null);
+  const [isDeletingSesi, setIsDeletingSesi] = useState(false);
 
   const fetchMateriDetail = useCallback(async () => {
     setMateriLoading(true);
@@ -51,10 +53,17 @@ export const MateriDetailPage = () => {
   };
 
   const handleConfirmDeleteSesi = async () => {
-    if (deletingSesi) {
+    if (!deletingSesi) return;
+    setIsDeletingSesi(true);
+    try {
       await deleteSesi(deletingSesi.id);
       setDeletingSesi(null);
-      fetchMateriDetail();
+      await fetchMateriDetail();
+      showSuccess('Sesi belajar berhasil dihapus.');
+    } catch (err) {
+      showError(err.message || 'Gagal menghapus sesi belajar.');
+    } finally {
+      setIsDeletingSesi(false);
     }
   };
 
@@ -136,6 +145,7 @@ export const MateriDetailPage = () => {
         onConfirm={handleConfirmDeleteSesi}
         title="Hapus Sesi Belajar"
         message={`Sesi tanggal ${formatTanggal(deletingSesi?.tanggal)} (${deletingSesi?.durasi_menit} menit) akan dihapus. Lanjutkan?`}
+        isLoading={isDeletingSesi}
       />
     </div>
   );

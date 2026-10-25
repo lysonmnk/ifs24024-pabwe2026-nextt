@@ -21,7 +21,8 @@ const shouldForceLogout = (endpoint, status) =>
  * Klien HTTP Terpusat (Centralized API Client).
  * Membungkus fungsi Fetch API standar dengan fitur otomatis:
  * 1. Base URL Resolution: Menggabungkan base URL konfigurasi dengan endpoint.
- * 2. Automatic Authorization Header Injection: Menyuntikkan Bearer JWT token dari tokenStorage jika tersedia.
+ * 2. Automatic Authorization Header & Cookie Handling: Mendukung credentials 'include' (HttpOnly cookie)
+ *    dengan fallback Authorization Bearer token dari storage untuk perlindungan ganda.
  * 3. Error Normalization: Memetakan status HTTP error dan payload JSON error ke JavaScript Error object terstruktur.
  * 4. Automatic Session Eviction: Jika menerima 401 Unauthorized pada rute terproteksi, otomatis menghapus token
  *    dan memicu event `auth:logout` untuk membersihkan state React Context.
@@ -40,6 +41,8 @@ export const apiClient = async (endpoint, options = {}) => {
 
   const config = {
     ...restOptions,
+    // Mendukung HttpOnly Cookie lintas domain secara aman
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
