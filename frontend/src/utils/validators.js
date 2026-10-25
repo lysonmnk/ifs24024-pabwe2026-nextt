@@ -72,10 +72,9 @@ export const validateRegister = ({ nama, email, password } = {}) => {
  * @param {Object} input
  * @param {string} input.judul - Judul materi (1-100 karakter)
  * @param {string} [input.status] - Status progres ('belum' | 'sedang' | 'selesai')
- * @param {string} [input.sumber] - Sumber atau referensi materi (opsional, maks 100 karakter)
  * @returns {{ isValid: boolean, errors: Record<string, string> }} Hasil evaluasi
  */
-export const validateMateri = ({ judul, status, sumber } = {}) => {
+export const validateMateri = ({ judul, status } = {}) => {
   const errors = {};
 
   if (!judul || !judul.trim()) {
@@ -89,10 +88,6 @@ export const validateMateri = ({ judul, status, sumber } = {}) => {
     errors.status = 'Status tidak valid';
   }
 
-  if (sumber && typeof sumber === 'string' && sumber.trim().length > 100) {
-    errors.sumber = 'Sumber materi maksimal 100 karakter';
-  }
-
   return {
     isValid: Object.keys(errors).length === 0,
     errors
@@ -103,8 +98,8 @@ export const validateMateri = ({ judul, status, sumber } = {}) => {
  * Memvalidasi form log sesi belajar.
  *
  * @param {Object} input
- * @param {string} input.tanggal - Tanggal sesi belajar (wajib diisi, format YYYY-MM-DD)
- * @param {number|string} [input.durasi_menit] - Durasi menit (integer positif 1 - 1440)
+ * @param {string} input.tanggal - Tanggal sesi belajar (wajib diisi)
+ * @param {number|string} [input.durasi_menit] - Durasi menit (integer > 0)
  * @param {number|string} [input.durasiMenit] - Alias camelCase durasi menit
  * @returns {{ isValid: boolean, errors: Record<string, string> }} Hasil evaluasi
  */
@@ -123,9 +118,6 @@ export const validateSesi = ({ tanggal, durasi_menit, durasiMenit } = {}) => {
   } else if (!Number.isInteger(durasiNum) || durasiNum <= 0) {
     errors.durasi_menit = 'Durasi harus berupa angka positif (> 0 menit)';
     errors.durasiMenit = 'Durasi harus berupa angka positif (> 0 menit)';
-  } else if (durasiNum > 1440) {
-    errors.durasi_menit = 'Durasi maksimal 1440 menit (24 jam)';
-    errors.durasiMenit = 'Durasi maksimal 1440 menit (24 jam)';
   }
 
   return {

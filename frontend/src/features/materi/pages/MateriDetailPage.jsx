@@ -10,7 +10,6 @@ import { Loading } from '../../../components/common/Loading.jsx';
 import { ErrorMessage } from '../../../components/common/ErrorMessage.jsx';
 import { Button } from '../../../components/common/Button.jsx';
 import { formatDurasi, formatTanggal, getStatusMeta } from '../../../utils/formatters.js';
-import { showSuccess, showError } from '../../../helpers/dialogHelper.js';
 
 export const MateriDetailPage = () => {
   const { id } = useParams();
@@ -47,26 +46,15 @@ export const MateriDetailPage = () => {
   }, [fetchMateriDetail]);
 
   const handleAddSesi = async (payload) => {
-    try {
-      await addSesi(payload);
-      fetchMateriDetail();
-      showSuccess('Sesi belajar baru berhasil dicatat');
-    } catch (err) {
-      showError(err.message || 'Gagal menambahkan sesi belajar');
-      throw err;
-    }
+    await addSesi(payload);
+    fetchMateriDetail();
   };
 
   const handleConfirmDeleteSesi = async () => {
     if (deletingSesi) {
-      try {
-        await deleteSesi(deletingSesi.id);
-        setDeletingSesi(null);
-        fetchMateriDetail();
-        showSuccess('Sesi belajar berhasil dihapus');
-      } catch (err) {
-        showError(err.message || 'Gagal menghapus sesi belajar');
-      }
+      await deleteSesi(deletingSesi.id);
+      setDeletingSesi(null);
+      fetchMateriDetail();
     }
   };
 

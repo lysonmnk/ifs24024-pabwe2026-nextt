@@ -9,7 +9,6 @@ import { StatsBanner } from '../../../components/StatsBanner.jsx';
 import { Loading } from '../../../components/common/Loading.jsx';
 import { ErrorMessage } from '../../../components/common/ErrorMessage.jsx';
 import { Button } from '../../../components/common/Button.jsx';
-import { showSuccess, showError } from '../../../helpers/dialogHelper.js';
 
 export const MateriListPage = () => {
   const {
@@ -50,29 +49,17 @@ export const MateriListPage = () => {
   };
 
   const handleModalSubmit = async (data) => {
-    try {
-      if (editingMateri) {
-        await updateMateri(editingMateri.id, data);
-        showSuccess('Materi belajar berhasil diperbarui');
-      } else {
-        await addMateri(data);
-        showSuccess('Materi belajar baru berhasil ditambahkan');
-      }
-    } catch (err) {
-      showError(err.message || 'Gagal memproses materi');
-      throw err;
+    if (editingMateri) {
+      await updateMateri(editingMateri.id, data);
+    } else {
+      await addMateri(data);
     }
   };
 
   const handleConfirmDelete = async () => {
     if (deletingMateri) {
-      try {
-        await deleteMateri(deletingMateri.id);
-        setDeletingMateri(null);
-        showSuccess('Materi dan seluruh riwayat sesi berhasil dihapus');
-      } catch (err) {
-        showError(err.message || 'Gagal menghapus materi');
-      }
+      await deleteMateri(deletingMateri.id);
+      setDeletingMateri(null);
     }
   };
 
