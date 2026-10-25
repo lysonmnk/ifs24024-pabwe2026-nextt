@@ -16,13 +16,17 @@ function App() {
       <Route element={<GuestRoute />}>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/register" element={<RegisterPage />} />
         </Route>
       </Route>
 
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
           <Route path="/" element={<MateriListPage />} />
+          <Route path="/dashboard" element={<MateriListPage />} />
+          <Route path="/materi" element={<MateriListPage />} />
           <Route path="/materi/:id" element={<MateriDetailPage />} />
         </Route>
       </Route>
