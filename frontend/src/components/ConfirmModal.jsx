@@ -20,7 +20,7 @@ export const ConfirmModal = ({
             <div className="confirm-icon">
               <AlertTriangle size={20} />
             </div>
-            <h3 className="modal-title">{title}</h3>
+            <h2 className="modal-title">{title}</h2>
           </div>
           <button type="button" className="btn-icon" onClick={onClose} aria-label="Tutup">
             <X size={18} />

@@ -104,7 +104,7 @@ export const MateriDetailPage = () => {
 
       <div className="session-header-section">
         <div>
-          <h3 className="section-title">Riwayat Sesi Belajar</h3>
+          <h2 className="section-title">Riwayat Sesi Belajar</h2>
           <p className="section-subtitle">
             Catatan sesi belajar beserta waktu yang dihabiskan
           </p>

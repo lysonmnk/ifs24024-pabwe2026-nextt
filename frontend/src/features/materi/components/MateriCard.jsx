@@ -38,7 +38,7 @@ export const MateriCard = ({ materi, onEdit, onDelete }) => {
         </div>
       </div>
 
-      <h3 className="materi-title">{materi.judul}</h3>
+      <h2 className="materi-title">{materi.judul}</h2>
 
       {materi.sumber && (
         <div className="materi-source">
